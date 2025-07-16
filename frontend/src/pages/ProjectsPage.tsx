@@ -197,10 +197,9 @@ export const ProjectsPage: React.FC = () => {
               No projects found
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {projects.length === 0 
+              {projects.length === 0
                 ? "Get started by creating a new project."
-                : "Try adjusting your filters or create a new project."
-              }
+                : "Try adjusting your filters or create a new project."}
             </p>
             <div className="mt-6">
               <button

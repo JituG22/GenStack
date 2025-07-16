@@ -73,11 +73,16 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
       // Listen for user connection events
       newSocket.on("user_connected", (data) => {
-        setConnectedUsers(prev => [...prev.filter(userId => userId !== data.userId), data.userId]);
+        setConnectedUsers((prev) => [
+          ...prev.filter((userId) => userId !== data.userId),
+          data.userId,
+        ]);
       });
 
       newSocket.on("user_disconnected", (data) => {
-        setConnectedUsers(prev => prev.filter(userId => userId !== data.userId));
+        setConnectedUsers((prev) =>
+          prev.filter((userId) => userId !== data.userId)
+        );
       });
 
       newSocket.on("connected_users", (data) => {
