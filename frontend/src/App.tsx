@@ -4,7 +4,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
-import { ProjectsPage, AnalyticsPage, CollaborativeTestPage } from "./pages";
+import {
+  ProjectsPage,
+  AnalyticsPage,
+  CollaborativeTestPage,
+  EnhancedTemplatesPage,
+} from "./pages";
 
 // Components
 import { Layout } from "./components/Layout";
@@ -29,7 +34,6 @@ function App() {
                   {/* Public routes */}
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
-
                   {/* Protected routes */}
                   <Route
                     path="/"
@@ -40,20 +44,13 @@ function App() {
                         </Layout>
                       </ProtectedRoute>
                     }
-                  />
+                  />{" "}
                   <Route
                     path="/templates"
                     element={
                       <ProtectedRoute>
                         <Layout>
-                          <div className="p-6">
-                            <h1 className="text-2xl font-bold text-gray-900">
-                              Templates
-                            </h1>
-                            <p className="text-gray-600">
-                              Templates page coming soon...
-                            </p>
-                          </div>
+                          <EnhancedTemplatesPage />
                         </Layout>
                       </ProtectedRoute>
                     }

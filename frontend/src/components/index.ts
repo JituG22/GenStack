@@ -5,3 +5,6 @@ export { AdvancedFilter } from "./AdvancedFilter";
 export { default as DataTable } from "./DataTable";
 export { AnalyticsDashboard } from "./AnalyticsDashboard";
 export { CollaborativeCanvas } from "./CollaborativeCanvas";
+export { NodeTemplateManager } from "./NodeTemplateManager";
+export { NodePropertyEditor } from "./NodePropertyEditor";
+export { ProjectVersionControl } from "./ProjectVersionControl";
