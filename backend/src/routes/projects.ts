@@ -7,6 +7,7 @@ import {
   validatePagination,
   handleValidationErrors,
 } from "../middleware/validation";
+import { FilterService, AdvancedFilter } from "../services/filterService";
 
 const router = Router();
 
@@ -90,6 +91,137 @@ router.get(
       res.status(500).json({
         success: false,
         message: "Failed to retrieve projects",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// @route   POST /api/projects/filter
+// @desc    Get projects with advanced filtering
+// @access  Private
+router.post(
+  "/filter",
+  auth,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const filters: AdvancedFilter = req.body;
+
+      // Validate filters
+      const validation = FilterService.validateFilters(filters);
+      if (!validation.valid) {
+        res.status(400).json({
+          success: false,
+          message: "Invalid filter parameters",
+          errors: validation.errors,
+        });
+        return;
+      }
+
+      // Add organization filter to ensure user can only see their org's projects
+      if (!filters.operators) {
+        filters.operators = [];
+      }
+      filters.operators.push({
+        field: "organization",
+        operator: "eq",
+        value: req.user!.organization,
+      });
+
+      // Build query
+      const query = FilterService.buildQuery(filters);
+      const sort = FilterService.buildSort(filters);
+
+      // Setup pagination
+      const page = filters.pagination?.page || 1;
+      const limit = Math.min(filters.pagination?.limit || 10, 100);
+      const skip = (page - 1) * limit;
+
+      // Execute query
+      const total = await Project.countDocuments(query);
+      const projects = await Project.find(query)
+        .populate("createdBy", "firstName lastName email")
+        .populate("collaborators", "firstName lastName email")
+        .sort(sort)
+        .skip(skip)
+        .limit(limit);
+
+      const pages = Math.ceil(total / limit);
+
+      res.json({
+        success: true,
+        message: "Projects filtered successfully",
+        data: projects,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages,
+          hasNext: page < pages,
+          hasPrev: page > 1,
+        },
+        filters: {
+          applied: filters,
+          resultsCount: projects.length,
+        },
+      });
+    } catch (error: any) {
+      console.error("Filter projects error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to filter projects",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// @route   GET /api/projects/suggestions/:field
+// @desc    Get filter suggestions for a specific field
+// @access  Private
+router.get(
+  "/suggestions/:field",
+  auth,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { field } = req.params;
+      const query = req.query.query as string;
+
+      // Validate field name to prevent injection
+      const allowedFields = [
+        "status",
+        "tags",
+        "createdBy",
+        "collaborators",
+        "metadata.category",
+        "metadata.priority",
+      ];
+
+      if (!allowedFields.includes(field)) {
+        res.status(400).json({
+          success: false,
+          message: "Invalid field for suggestions",
+        });
+        return;
+      }
+
+      const suggestions = await FilterService.getFilterSuggestions(
+        Project,
+        field,
+        query
+      );
+
+      res.json({
+        success: true,
+        message: "Suggestions retrieved successfully",
+        data: suggestions,
+        field,
+      });
+    } catch (error: any) {
+      console.error("Get suggestions error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get suggestions",
         error: error.message,
       });
     }

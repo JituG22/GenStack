@@ -232,6 +232,23 @@ export const projectsApi = {
       body: JSON.stringify({ ids }),
     });
   },
+
+  async filterProjects(filters: any): Promise<any> {
+    return fetchApi<any>("/projects/filter", {
+      method: "POST",
+      body: JSON.stringify(filters),
+    });
+  },
+
+  async getFilterSuggestions(
+    field: string,
+    query?: string
+  ): Promise<ApiResponse<any>> {
+    const queryString = query ? `?query=${encodeURIComponent(query)}` : "";
+    return fetchApi<ApiResponse<any>>(
+      `/projects/suggestions/${field}${queryString}`
+    );
+  },
 };
 
 export { ApiError };

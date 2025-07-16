@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { projectsApi } from "../lib/api";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { AdvancedFilter } from "../components/AdvancedFilter";
 
 interface Project {
   id: string;
@@ -13,6 +14,7 @@ interface Project {
 
 export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [newProject, setNewProject] = useState({ name: "", description: "" });
   const [showForm, setShowForm] = useState(false);
@@ -21,6 +23,15 @@ export const ProjectsPage: React.FC = () => {
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  useEffect(() => {
+    // Initialize filtered projects with all projects
+    setFilteredProjects(projects);
+  }, [projects]);
+
+  const handleFilterChange = (filteredData: Project[]) => {
+    setFilteredProjects(filteredData);
+  };
 
   const fetchProjects = async () => {
     try {
@@ -175,15 +186,21 @@ export const ProjectsPage: React.FC = () => {
         </div>
       )}
 
+      {/* Advanced Filter */}
+      <AdvancedFilter onFilterChange={handleFilterChange} className="mb-6" />
+
       {/* Projects List */}
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        {projects.length === 0 ? (
+        {filteredProjects.length === 0 ? (
           <div className="text-center py-12">
             <h3 className="mt-2 text-sm font-medium text-gray-900">
-              No projects
+              No projects found
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              Get started by creating a new project.
+              {projects.length === 0 
+                ? "Get started by creating a new project."
+                : "Try adjusting your filters or create a new project."
+              }
             </p>
             <div className="mt-6">
               <button
@@ -197,7 +214,7 @@ export const ProjectsPage: React.FC = () => {
           </div>
         ) : (
           <ul className="divide-y divide-gray-200">
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <li key={project.id}>
                 <div className="px-4 py-4 flex items-center justify-between hover:bg-gray-50">
                   <div className="flex-1">
