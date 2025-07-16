@@ -4,3 +4,4 @@ export { default as NotificationSystem } from "./NotificationSystem";
 export { AdvancedFilter } from "./AdvancedFilter";
 export { default as DataTable } from "./DataTable";
 export { AnalyticsDashboard } from "./AnalyticsDashboard";
+export { CollaborativeCanvas } from "./CollaborativeCanvas";
