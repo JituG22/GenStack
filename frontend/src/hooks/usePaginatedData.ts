@@ -1,18 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
-import { QueryParams, PaginatedResponse } from '../lib/api';
+import { useState, useEffect, useCallback } from "react";
+import { QueryParams, PaginatedResponse } from "../lib/api";
 
 interface UsePaginatedDataOptions {
   defaultLimit?: number;
   defaultSortBy?: string;
-  defaultSortOrder?: 'asc' | 'desc';
+  defaultSortOrder?: "asc" | "desc";
 }
 
 interface UsePaginatedDataReturn<T> {
   data: T[];
   loading: boolean;
   error: string | null;
-  pagination: PaginatedResponse<T>['pagination'] | null;
-  sort: PaginatedResponse<T>['sort'] | null;
+  pagination: PaginatedResponse<T>["pagination"] | null;
+  sort: PaginatedResponse<T>["sort"] | null;
   queryParams: QueryParams;
   setQueryParams: (params: Partial<QueryParams>) => void;
   refetch: () => void;
@@ -28,17 +28,19 @@ export function usePaginatedData<T extends { id: string }>(
 ): UsePaginatedDataReturn<T> {
   const {
     defaultLimit = 10,
-    defaultSortBy = 'createdAt',
-    defaultSortOrder = 'desc',
+    defaultSortBy = "createdAt",
+    defaultSortOrder = "desc",
   } = options;
 
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<PaginatedResponse<T>['pagination'] | null>(null);
-  const [sort, setSort] = useState<PaginatedResponse<T>['sort'] | null>(null);
+  const [pagination, setPagination] = useState<
+    PaginatedResponse<T>["pagination"] | null
+  >(null);
+  const [sort, setSort] = useState<PaginatedResponse<T>["sort"] | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  
+
   const [queryParams, setQueryParamsState] = useState<QueryParams>({
     page: 1,
     limit: defaultLimit,
@@ -47,7 +49,7 @@ export function usePaginatedData<T extends { id: string }>(
   });
 
   const setQueryParams = useCallback((newParams: Partial<QueryParams>) => {
-    setQueryParamsState(prev => ({ ...prev, ...newParams }));
+    setQueryParamsState((prev) => ({ ...prev, ...newParams }));
     setSelectedItems(new Set()); // Clear selection when query changes
   }, []);
 
@@ -55,15 +57,15 @@ export function usePaginatedData<T extends { id: string }>(
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetchFunction(queryParams);
-      
+
       setData(response.data);
       setPagination(response.pagination);
       setSort(response.sort || null);
     } catch (err: any) {
-      console.error('Error fetching data:', err);
-      setError(err.message || 'Failed to fetch data');
+      console.error("Error fetching data:", err);
+      setError(err.message || "Failed to fetch data");
       setData([]);
       setPagination(null);
       setSort(null);
@@ -81,7 +83,7 @@ export function usePaginatedData<T extends { id: string }>(
   }, [fetchData]);
 
   const toggleSelection = useCallback((id: string) => {
-    setSelectedItems(prev => {
+    setSelectedItems((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
@@ -96,7 +98,7 @@ export function usePaginatedData<T extends { id: string }>(
     if (selectedItems.size === data.length && data.length > 0) {
       setSelectedItems(new Set());
     } else {
-      setSelectedItems(new Set(data.map(item => item.id)));
+      setSelectedItems(new Set(data.map((item) => item.id)));
     }
   }, [data, selectedItems.size]);
 

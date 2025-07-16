@@ -45,7 +45,7 @@ export interface QueryParams {
   limit?: number;
   search?: string;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
   [key: string]: any; // For entity-specific filters
 }
 
@@ -59,15 +59,15 @@ class ApiError extends Error {
 // Helper function to build query string
 function buildQueryString(params: QueryParams): string {
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
+    if (value !== undefined && value !== null && value !== "") {
       searchParams.append(key, value.toString());
     }
   });
-  
+
   const queryString = searchParams.toString();
-  return queryString ? `?${queryString}` : '';
+  return queryString ? `?${queryString}` : "";
 }
 
 async function fetchApi<T>(
@@ -160,7 +160,9 @@ export const nodesApi = {
 
 // Enhanced Templates API
 export const templatesApi = {
-  async getTemplates(params: QueryParams = {}): Promise<PaginatedResponse<any>> {
+  async getTemplates(
+    params: QueryParams = {}
+  ): Promise<PaginatedResponse<any>> {
     const queryString = buildQueryString(params);
     return fetchApi<PaginatedResponse<any>>(`/templates${queryString}`);
   },
@@ -176,7 +178,10 @@ export const templatesApi = {
     });
   },
 
-  async updateTemplate(id: string, templateData: any): Promise<ApiResponse<any>> {
+  async updateTemplate(
+    id: string,
+    templateData: any
+  ): Promise<ApiResponse<any>> {
     return fetchApi<ApiResponse<any>>(`/templates/${id}`, {
       method: "PUT",
       body: JSON.stringify(templateData),

@@ -1,5 +1,5 @@
-import React from 'react';
-import { QueryParams } from '../lib/api';
+import React from "react";
+import { QueryParams } from "../lib/api";
 
 interface Column<T> {
   key: keyof T | string;
@@ -22,7 +22,7 @@ interface DataTableProps<T> {
   };
   sort?: {
     sortBy: string;
-    sortOrder: 'asc' | 'desc';
+    sortOrder: "asc" | "desc";
   };
   searchValue?: string;
   onQueryChange?: (params: QueryParams) => void;
@@ -42,12 +42,12 @@ export default function DataTable<T extends { id: string }>({
   loading = false,
   pagination,
   sort,
-  searchValue = '',
+  searchValue = "",
   onQueryChange,
   onRowSelect,
   selectedItems = new Set(),
   actions,
-  className = '',
+  className = "",
 }: DataTableProps<T>) {
   const handleSearch = (value: string) => {
     onQueryChange?.({ search: value, page: 1 });
@@ -55,10 +55,10 @@ export default function DataTable<T extends { id: string }>({
 
   const handleSort = (columnKey: string) => {
     if (!onQueryChange) return;
-    
-    const newSortOrder = 
-      sort?.sortBy === columnKey && sort?.sortOrder === 'asc' ? 'desc' : 'asc';
-    
+
+    const newSortOrder =
+      sort?.sortBy === columnKey && sort?.sortOrder === "asc" ? "desc" : "asc";
+
     onQueryChange({ sortBy: columnKey, sortOrder: newSortOrder });
   };
 
@@ -74,7 +74,7 @@ export default function DataTable<T extends { id: string }>({
     if (sort?.sortBy !== columnKey) {
       return <span className="text-gray-400">↕️</span>;
     }
-    return sort.sortOrder === 'asc' ? <span>↑</span> : <span>↓</span>;
+    return sort.sortOrder === "asc" ? <span>↑</span> : <span>↓</span>;
   };
 
   return (
@@ -91,7 +91,7 @@ export default function DataTable<T extends { id: string }>({
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           {pagination && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Show:</span>
@@ -119,9 +119,11 @@ export default function DataTable<T extends { id: string }>({
                 <th className="px-4 py-3 text-left">
                   <input
                     type="checkbox"
-                    checked={selectedItems.size === data.length && data.length > 0}
+                    checked={
+                      selectedItems.size === data.length && data.length > 0
+                    }
                     onChange={(e) => {
-                      data.forEach(item => 
+                      data.forEach((item) =>
                         onRowSelect(item, e.target.checked)
                       );
                     }}
@@ -129,7 +131,7 @@ export default function DataTable<T extends { id: string }>({
                   />
                 </th>
               )}
-              
+
               {columns.map((column) => (
                 <th
                   key={column.key as string}
@@ -148,7 +150,7 @@ export default function DataTable<T extends { id: string }>({
                   </div>
                 </th>
               ))}
-              
+
               {actions && (
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -156,12 +158,14 @@ export default function DataTable<T extends { id: string }>({
               )}
             </tr>
           </thead>
-          
+
           <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
               <tr>
-                <td 
-                  colSpan={columns.length + (onRowSelect ? 1 : 0) + (actions ? 1 : 0)}
+                <td
+                  colSpan={
+                    columns.length + (onRowSelect ? 1 : 0) + (actions ? 1 : 0)
+                  }
                   className="px-4 py-8 text-center text-gray-500"
                 >
                   <div className="flex items-center justify-center">
@@ -172,8 +176,10 @@ export default function DataTable<T extends { id: string }>({
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td 
-                  colSpan={columns.length + (onRowSelect ? 1 : 0) + (actions ? 1 : 0)}
+                <td
+                  colSpan={
+                    columns.length + (onRowSelect ? 1 : 0) + (actions ? 1 : 0)
+                  }
                   className="px-4 py-8 text-center text-gray-500"
                 >
                   No data found
@@ -192,16 +198,18 @@ export default function DataTable<T extends { id: string }>({
                       />
                     </td>
                   )}
-                  
+
                   {columns.map((column) => (
-                    <td key={column.key as string} className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {column.render 
+                    <td
+                      key={column.key as string}
+                      className="px-4 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {column.render
                         ? column.render(item[column.key as keyof T], item)
-                        : String(item[column.key as keyof T] || '')
-                      }
+                        : String(item[column.key as keyof T] || "")}
                     </td>
                   ))}
-                  
+
                   {actions && (
                     <td className="px-4 py-4 whitespace-nowrap text-right text-sm">
                       <div className="flex items-center justify-end gap-2">
@@ -243,11 +251,11 @@ export default function DataTable<T extends { id: string }>({
       {pagination && (
         <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
+            Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
             {pagination.total} results
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => handlePageChange(pagination.page - 1)}
@@ -256,11 +264,11 @@ export default function DataTable<T extends { id: string }>({
             >
               Previous
             </button>
-            
+
             <span className="px-3 py-1 text-sm">
               Page {pagination.page} of {pagination.pages}
             </span>
-            
+
             <button
               onClick={() => handlePageChange(pagination.page + 1)}
               disabled={!pagination.hasNext}

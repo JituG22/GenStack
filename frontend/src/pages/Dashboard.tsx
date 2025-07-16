@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { usePaginatedData } from '../hooks/usePaginatedData';
-import { projectsApi, nodesApi, templatesApi } from '../lib/api';
-import DataTable from '../components/DataTable';
+import { usePaginatedData } from "../hooks/usePaginatedData";
+import { projectsApi, nodesApi, templatesApi } from "../lib/api";
+import DataTable from "../components/DataTable";
 import {
   PlusIcon,
   DocumentIcon,
@@ -13,32 +13,38 @@ import {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'projects' | 'nodes' | 'templates'>('projects');
+  const [activeTab, setActiveTab] = useState<
+    "projects" | "nodes" | "templates"
+  >("projects");
 
   // Projects data
   const projectsData = usePaginatedData(projectsApi.getProjects, {
     defaultLimit: 5,
-    defaultSortBy: 'updatedAt',
+    defaultSortBy: "updatedAt",
   });
 
-  // Nodes data  
+  // Nodes data
   const nodesData = usePaginatedData(nodesApi.getNodes, {
     defaultLimit: 5,
-    defaultSortBy: 'createdAt',
+    defaultSortBy: "createdAt",
   });
 
   // Templates data
   const templatesData = usePaginatedData(templatesApi.getTemplates, {
     defaultLimit: 5,
-    defaultSortBy: 'downloads',
+    defaultSortBy: "downloads",
   });
 
   const getCurrentData = () => {
     switch (activeTab) {
-      case 'projects': return projectsData;
-      case 'nodes': return nodesData;
-      case 'templates': return templatesData;
-      default: return projectsData;
+      case "projects":
+        return projectsData;
+      case "nodes":
+        return nodesData;
+      case "templates":
+        return templatesData;
+      default:
+        return projectsData;
     }
   };
 
@@ -52,7 +58,7 @@ export default function Dashboard() {
       changeType: "increase" as const,
     },
     {
-      name: "Total Nodes", 
+      name: "Total Nodes",
       value: nodesData.pagination?.total || 0,
       icon: CubeIcon,
       color: "bg-green-500",
@@ -71,8 +77,8 @@ export default function Dashboard() {
 
   const projectColumns = [
     {
-      key: 'name',
-      title: 'Project Name',
+      key: "name",
+      title: "Project Name",
       sortable: true,
       render: (value: string) => (
         <div className="flex items-center">
@@ -86,27 +92,32 @@ export default function Dashboard() {
       ),
     },
     {
-      key: 'status',
-      title: 'Status',
+      key: "status",
+      title: "Status",
       sortable: true,
       render: (value: string) => (
-        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-          value === 'active' ? 'bg-green-100 text-green-800' :
-          value === 'completed' ? 'bg-blue-100 text-blue-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
+        <span
+          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            value === "active"
+              ? "bg-green-100 text-green-800"
+              : value === "completed"
+              ? "bg-blue-100 text-blue-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
           {value}
         </span>
       ),
     },
     {
-      key: 'createdBy',
-      title: 'Created By',
-      render: (value: any) => value ? `${value.firstName} ${value.lastName}` : 'Unknown',
+      key: "createdBy",
+      title: "Created By",
+      render: (value: any) =>
+        value ? `${value.firstName} ${value.lastName}` : "Unknown",
     },
     {
-      key: 'updatedAt',
-      title: 'Last Updated',
+      key: "updatedAt",
+      title: "Last Updated",
       sortable: true,
       render: (value: string) => new Date(value).toLocaleDateString(),
     },
@@ -114,8 +125,8 @@ export default function Dashboard() {
 
   const nodeColumns = [
     {
-      key: 'name',
-      title: 'Node Name',
+      key: "name",
+      title: "Node Name",
       sortable: true,
       render: (value: string, item: any) => (
         <div className="flex items-center">
@@ -130,24 +141,26 @@ export default function Dashboard() {
       ),
     },
     {
-      key: 'category',
-      title: 'Category',
+      key: "category",
+      title: "Category",
       sortable: true,
     },
     {
-      key: 'isActive',
-      title: 'Status',
+      key: "isActive",
+      title: "Status",
       render: (value: boolean) => (
-        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-          value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
-          {value ? 'Active' : 'Inactive'}
+        <span
+          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            value ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+          }`}
+        >
+          {value ? "Active" : "Inactive"}
         </span>
       ),
     },
     {
-      key: 'createdAt',
-      title: 'Created',
+      key: "createdAt",
+      title: "Created",
       sortable: true,
       render: (value: string) => new Date(value).toLocaleDateString(),
     },
@@ -155,8 +168,8 @@ export default function Dashboard() {
 
   const templateColumns = [
     {
-      key: 'name',
-      title: 'Template Name',
+      key: "name",
+      title: "Template Name",
       sortable: true,
       render: (value: string, item: any) => (
         <div className="flex items-center">
@@ -171,24 +184,26 @@ export default function Dashboard() {
       ),
     },
     {
-      key: 'downloads',
-      title: 'Downloads',
+      key: "downloads",
+      title: "Downloads",
       sortable: true,
     },
     {
-      key: 'isPublic',
-      title: 'Visibility',
+      key: "isPublic",
+      title: "Visibility",
       render: (value: boolean) => (
-        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-          value ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-        }`}>
-          {value ? 'Public' : 'Private'}
+        <span
+          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            value ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {value ? "Public" : "Private"}
         </span>
       ),
     },
     {
-      key: 'createdAt',
-      title: 'Created',
+      key: "createdAt",
+      title: "Created",
       sortable: true,
       render: (value: string) => new Date(value).toLocaleDateString(),
     },
@@ -196,10 +211,14 @@ export default function Dashboard() {
 
   const getColumns = () => {
     switch (activeTab) {
-      case 'projects': return projectColumns;
-      case 'nodes': return nodeColumns;
-      case 'templates': return templateColumns;
-      default: return projectColumns;
+      case "projects":
+        return projectColumns;
+      case "nodes":
+        return nodeColumns;
+      case "templates":
+        return templateColumns;
+      default:
+        return projectColumns;
     }
   };
 
@@ -221,7 +240,9 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-900">
             Welcome back, {user?.firstName}!
           </h1>
-          <p className="text-gray-600">Here's what's happening with your projects.</p>
+          <p className="text-gray-600">
+            Here's what's happening with your projects.
+          </p>
         </div>
         <Link
           to="/projects/new"
@@ -248,10 +269,16 @@ export default function Dashboard() {
               </p>
             </dt>
             <dd className="ml-16 pb-6 flex items-baseline sm:pb-7">
-              <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
-              <p className={`ml-2 flex items-baseline text-sm font-semibold ${
-                stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
-              }`}>
+              <p className="text-2xl font-semibold text-gray-900">
+                {stat.value}
+              </p>
+              <p
+                className={`ml-2 flex items-baseline text-sm font-semibold ${
+                  stat.changeType === "increase"
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
                 {stat.change}
               </p>
             </dd>
@@ -263,14 +290,14 @@ export default function Dashboard() {
       <div className="bg-white shadow rounded-lg">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8 px-4" aria-label="Tabs">
-            {(['projects', 'nodes', 'templates'] as const).map((tab) => (
+            {(["projects", "nodes", "templates"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`${
                   activeTab === tab
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? "border-indigo-500 text-indigo-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize`}
               >
                 {tab}
@@ -286,11 +313,15 @@ export default function Dashboard() {
             columns={getColumns()}
             loading={currentData.loading}
             pagination={currentData.pagination || undefined}
-            sort={currentData.sort ? {
-              sortBy: currentData.sort.sortBy,
-              sortOrder: currentData.sort.sortOrder as 'asc' | 'desc'
-            } : undefined}
-            searchValue={currentData.queryParams.search || ''}
+            sort={
+              currentData.sort
+                ? {
+                    sortBy: currentData.sort.sortBy,
+                    sortOrder: currentData.sort.sortOrder as "asc" | "desc",
+                  }
+                : undefined
+            }
+            searchValue={currentData.queryParams.search || ""}
             onQueryChange={currentData.setQueryParams}
             selectedItems={currentData.selectedItems}
             onRowSelect={(item, selected) => {
@@ -301,9 +332,9 @@ export default function Dashboard() {
               }
             }}
             actions={{
-              onView: (item) => console.log('View', item),
-              onEdit: (item) => console.log('Edit', item),
-              onDelete: (item) => console.log('Delete', item),
+              onView: (item) => console.log("View", item),
+              onEdit: (item) => console.log("Edit", item),
+              onDelete: (item) => console.log("Delete", item),
             }}
           />
         </div>
@@ -311,7 +342,9 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          Quick Actions
+        </h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             to="/projects/new"
@@ -324,9 +357,7 @@ export default function Dashboard() {
             </div>
             <div className="mt-4">
               <h3 className="text-lg font-medium">
-                <span className="focus:outline-none">
-                  Create New Project
-                </span>
+                <span className="focus:outline-none">Create New Project</span>
               </h3>
               <p className="mt-2 text-sm text-gray-500">
                 Start building your next workflow with our visual editor.
@@ -345,9 +376,7 @@ export default function Dashboard() {
             </div>
             <div className="mt-4">
               <h3 className="text-lg font-medium">
-                <span className="focus:outline-none">
-                  Create Custom Node
-                </span>
+                <span className="focus:outline-none">Create Custom Node</span>
               </h3>
               <p className="mt-2 text-sm text-gray-500">
                 Build reusable components for your workflows.
@@ -366,9 +395,7 @@ export default function Dashboard() {
             </div>
             <div className="mt-4">
               <h3 className="text-lg font-medium">
-                <span className="focus:outline-none">
-                  Browse Templates
-                </span>
+                <span className="focus:outline-none">Browse Templates</span>
               </h3>
               <p className="mt-2 text-sm text-gray-500">
                 Discover pre-built templates to jumpstart your projects.
