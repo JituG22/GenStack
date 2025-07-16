@@ -38,6 +38,7 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
 ### Frontend Layer
 
 #### Canvas View (React Flow)
+
 - **Purpose**: Visual drag-and-drop interface
 - **Components**:
   - FlowCanvas: Main canvas component
@@ -46,6 +47,7 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
   - ToolbarPanel: Node creation and manipulation tools
 
 #### Node System
+
 - **Node Types**: React, Angular, API, Database, CI/CD, Forms
 - **Node Structure**:
   ```typescript
@@ -63,6 +65,7 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
   ```
 
 #### Configuration System
+
 - **PropertyPanel**: Dynamic form generation based on node schema
 - **CodeEditor**: Template code editing with syntax highlighting
 - **ValidationPanel**: Rule configuration and testing
@@ -70,6 +73,7 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
 ### Backend Layer
 
 #### Authentication & Authorization
+
 - **JWT Tokens**: Stateless authentication
 - **RBAC System**: Role-based access control
 - **Middleware Stack**:
@@ -78,6 +82,7 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
   - Request validation
 
 #### API Architecture
+
 ```
 /api
 ├── /auth
@@ -110,6 +115,7 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
 #### Collections Schema
 
 **Users Collection**
+
 ```javascript
 {
   _id: ObjectId,
@@ -124,6 +130,7 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
 ```
 
 **Nodes Collection**
+
 ```javascript
 {
   _id: ObjectId,
@@ -147,6 +154,7 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
 ```
 
 **Templates Collection**
+
 ```javascript
 {
   _id: ObjectId,
@@ -167,6 +175,7 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
 ## Security Architecture
 
 ### Authentication Flow
+
 1. User submits credentials
 2. Server validates and returns JWT
 3. Client stores token in secure storage
@@ -174,12 +183,14 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
 5. Server validates token and extracts user info
 
 ### Authorization Levels
+
 - **Admin**: Full system access
 - **Org Manager**: Organization-level management
 - **Developer**: Create and edit nodes/templates
 - **Viewer**: Read-only access
 
 ### Data Protection
+
 - Password hashing with bcrypt
 - Input validation and sanitization
 - SQL/NoSQL injection prevention
@@ -189,18 +200,21 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
 ## Performance Considerations
 
 ### Frontend Optimization
+
 - React component memoization
 - Virtual scrolling for large node lists
 - Lazy loading of node templates
 - Debounced search and filtering
 
 ### Backend Optimization
+
 - MongoDB indexing strategy
 - Caching layer (Redis)
 - Rate limiting
 - Connection pooling
 
 ### Scalability
+
 - Horizontal scaling capability
 - Microservices readiness
 - CDN integration for static assets
@@ -231,18 +245,22 @@ GenStack is designed as a modular, scalable drag-and-drop framework that allows 
 ## Technology Decisions
 
 ### Frontend: React + TypeScript
+
 - **Pros**: Large ecosystem, strong typing, excellent developer experience
 - **Cons**: Bundle size, learning curve for TypeScript
 
 ### Backend: Node.js + Express
+
 - **Pros**: JavaScript everywhere, fast development, large ecosystem
 - **Cons**: Single-threaded nature, callback complexity
 
 ### Database: MongoDB
+
 - **Pros**: Flexible schema, JSON-like documents, good for rapid development
 - **Cons**: Eventual consistency, memory usage
 
 ### State Management: React Context + Hooks
+
 - **Pros**: Built-in, no additional dependencies, simple for medium complexity
 - **Cons**: Performance issues with frequent updates, prop drilling
 

@@ -28,6 +28,7 @@ GenStack is a visual low-code platform that allows you to build applications, AP
 ### 2. Understanding the Interface
 
 #### Main Navigation
+
 - **Dashboard**: Overview of your projects and recent activity
 - **Canvas**: Visual node editor for building applications
 - **Templates**: Library of reusable node templates
@@ -35,6 +36,7 @@ GenStack is a visual low-code platform that allows you to build applications, AP
 - **Settings**: Account and organization settings
 
 #### Canvas Interface
+
 - **Toolbar**: Node creation and management tools
 - **Canvas Area**: Drag-and-drop workspace
 - **Property Panel**: Configure selected node properties
@@ -54,24 +56,28 @@ GenStack is a visual low-code platform that allows you to build applications, AP
 ### Node Types Overview
 
 #### Frontend Nodes
+
 - **React Component**: Create reusable React components
 - **Angular Component**: Build Angular components
 - **HTML Element**: Basic HTML elements
 - **CSS Styles**: Styling definitions
 
 #### Backend Nodes
+
 - **API Endpoint**: REST API endpoints
 - **Database Query**: MongoDB, PostgreSQL queries
 - **Authentication**: User authentication logic
 - **Middleware**: Express middleware functions
 
 #### Integration Nodes
+
 - **HTTP Request**: External API calls
 - **File Operations**: File upload/download
 - **Email Service**: Send emails
 - **Payment Gateway**: Payment processing
 
 #### CI/CD Nodes
+
 - **Build Step**: Build commands
 - **Test Runner**: Test execution
 - **Deployment**: Deploy to servers
@@ -91,18 +97,21 @@ Nodes can be connected to create workflows:
 Each node has configurable properties:
 
 #### Basic Properties
+
 - **Name**: Human-readable identifier
 - **Description**: Detailed explanation
 - **Category**: Organization category
 - **Tags**: Searchable keywords
 
 #### Functional Properties
+
 - **Template Code**: The actual code/logic
 - **Input Parameters**: Required inputs
 - **Output Format**: Expected outputs
 - **Validation Rules**: Input validation
 
 #### Advanced Properties
+
 - **Dependencies**: External libraries
 - **Environment Variables**: Runtime configuration
 - **Caching**: Performance optimization
@@ -150,12 +159,14 @@ Turn your nodes into reusable templates:
 ### Team Collaboration
 
 #### Roles and Permissions
+
 - **Admin**: Full project access and user management
 - **Editor**: Create and modify nodes
 - **Viewer**: Read-only access
 - **Guest**: Limited temporary access
 
 #### Sharing and Access
+
 - **Project Sharing**: Share entire projects
 - **Node Sharing**: Share individual nodes
 - **Template Sharing**: Share reusable templates
@@ -176,12 +187,14 @@ GenStack includes built-in version control:
 ### Testing and Validation
 
 #### Node Testing
+
 - **Test Button**: Quick functionality testing
 - **Mock Data**: Simulate inputs and outputs
 - **Performance Metrics**: Monitor execution time
 - **Error Logging**: Debug issues
 
 #### Integration Testing
+
 - **End-to-End Tests**: Test complete workflows
 - **API Testing**: Validate API endpoints
 - **UI Testing**: Component interaction tests
@@ -202,6 +215,7 @@ Generate production-ready code from your nodes:
 Create your own node types:
 
 #### Node Structure
+
 ```json
 {
   "type": "custom-node",
@@ -215,6 +229,7 @@ Create your own node types:
 ```
 
 #### Development Process
+
 1. **Define Requirements**: What does your node do?
 2. **Create Template**: Write the code template
 3. **Define Schema**: Specify properties and validations
@@ -227,18 +242,21 @@ Create your own node types:
 ### Deployment Options
 
 #### Static Sites
+
 - **Netlify**: Automatic deployment from Git
 - **Vercel**: Optimized for React/Next.js
 - **GitHub Pages**: Free static hosting
 - **AWS S3**: Scalable static hosting
 
 #### Full-Stack Applications
+
 - **Heroku**: Easy deployment platform
 - **AWS**: Complete cloud infrastructure
 - **Google Cloud**: Google's cloud platform
 - **DigitalOcean**: Simple cloud hosting
 
 #### Containerized Deployment
+
 - **Docker**: Container-based deployment
 - **Kubernetes**: Container orchestration
 - **AWS ECS**: Amazon's container service
@@ -257,18 +275,21 @@ Connect GenStack with your CI/CD pipeline:
 ### Production Considerations
 
 #### Performance
+
 - **Optimize Templates**: Efficient code patterns
 - **Minimize Dependencies**: Reduce bundle size
 - **Caching Strategies**: Improve load times
 - **CDN Integration**: Global content delivery
 
 #### Security
+
 - **Input Validation**: Sanitize all inputs
 - **Authentication**: Secure user access
 - **Authorization**: Role-based permissions
 - **Data Protection**: Encrypt sensitive data
 
 #### Monitoring
+
 - **Error Tracking**: Monitor runtime errors
 - **Performance Metrics**: Track application performance
 - **User Analytics**: Understand user behavior
@@ -277,6 +298,7 @@ Connect GenStack with your CI/CD pipeline:
 ## Best Practices
 
 ### Node Design
+
 1. **Single Responsibility**: Each node should do one thing well
 2. **Clear Naming**: Use descriptive names and descriptions
 3. **Proper Documentation**: Include usage examples
@@ -284,6 +306,7 @@ Connect GenStack with your CI/CD pipeline:
 5. **Testing**: Thoroughly test functionality
 
 ### Project Organization
+
 1. **Logical Grouping**: Group related nodes together
 2. **Consistent Naming**: Use naming conventions
 3. **Documentation**: Document project structure
@@ -291,6 +314,7 @@ Connect GenStack with your CI/CD pipeline:
 5. **Team Communication**: Keep team informed
 
 ### Performance Optimization
+
 1. **Minimize Complexity**: Keep nodes simple
 2. **Efficient Algorithms**: Use optimal approaches
 3. **Resource Management**: Handle memory and CPU efficiently
@@ -302,18 +326,21 @@ Connect GenStack with your CI/CD pipeline:
 ### Common Issues
 
 #### Node Connection Problems
+
 - **Incompatible Types**: Check input/output types match
 - **Missing Dependencies**: Ensure required nodes exist
 - **Circular Dependencies**: Avoid circular references
 - **Validation Errors**: Fix property validation issues
 
 #### Template Issues
+
 - **Loading Errors**: Check template syntax
 - **Missing Properties**: Verify all required properties
 - **Version Conflicts**: Update to compatible versions
 - **Permission Errors**: Check access permissions
 
 #### Performance Issues
+
 - **Slow Loading**: Optimize node complexity
 - **Memory Usage**: Reduce memory-intensive operations
 - **Network Timeouts**: Optimize API calls
@@ -322,18 +349,21 @@ Connect GenStack with your CI/CD pipeline:
 ### Getting Help
 
 #### Documentation
+
 - **User Guide**: This comprehensive guide
 - **API Reference**: Technical API documentation
 - **Video Tutorials**: Step-by-step video guides
 - **Examples**: Sample projects and templates
 
 #### Community Support
+
 - **Discord Server**: Real-time community chat
 - **GitHub Discussions**: Technical discussions
 - **Stack Overflow**: Question and answer format
 - **Reddit Community**: Informal discussions
 
 #### Professional Support
+
 - **Email Support**: Direct technical support
 - **Live Chat**: Real-time assistance
 - **Video Calls**: Scheduled consultation
@@ -342,12 +372,14 @@ Connect GenStack with your CI/CD pipeline:
 ## Keyboard Shortcuts
 
 ### Canvas Navigation
+
 - **Space + Drag**: Pan canvas
 - **Ctrl + Scroll**: Zoom in/out
 - **Ctrl + 0**: Fit to screen
 - **Ctrl + 1**: Actual size
 
 ### Node Operations
+
 - **Ctrl + C**: Copy selected nodes
 - **Ctrl + V**: Paste nodes
 - **Delete**: Delete selected nodes
@@ -355,6 +387,7 @@ Connect GenStack with your CI/CD pipeline:
 - **Tab**: Select next node
 
 ### General
+
 - **Ctrl + S**: Save project
 - **Ctrl + Z**: Undo action
 - **Ctrl + Y**: Redo action

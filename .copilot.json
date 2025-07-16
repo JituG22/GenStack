@@ -13,11 +13,5 @@
     "ui builder",
     "pipeline builder"
   ],
-  "mainTech": [
-    "React",
-    "React Flow",
-    "Node.js",
-    "Express",
-    "MongoDB"
-  ]
+  "mainTech": ["React", "React Flow", "Node.js", "Express", "MongoDB"]
 }

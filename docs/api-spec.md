@@ -1,19 +1,24 @@
 # API Specification
 
 ## Base URL
+
 ```
 Production: https://api.genstack.io
 Development: http://localhost:5000
 ```
 
 ## Authentication
+
 All protected endpoints require a JWT token in the Authorization header:
+
 ```
 Authorization: Bearer <jwt_token>
 ```
 
 ## Response Format
+
 All API responses follow this structure:
+
 ```json
 {
   "success": true,
@@ -24,6 +29,7 @@ All API responses follow this structure:
 ```
 
 Error responses:
+
 ```json
 {
   "success": false,
@@ -39,9 +45,11 @@ Error responses:
 ## Authentication Endpoints
 
 ### POST /api/auth/register
+
 Register a new user.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -53,6 +61,7 @@ Register a new user.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -70,9 +79,11 @@ Register a new user.
 ```
 
 ### POST /api/auth/login
+
 Authenticate user and return JWT token.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -81,6 +92,7 @@ Authenticate user and return JWT token.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -99,11 +111,13 @@ Authenticate user and return JWT token.
 ```
 
 ### GET /api/auth/me
+
 Get current user information.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -122,9 +136,11 @@ Get current user information.
 ## Node Endpoints
 
 ### GET /api/nodes
+
 Get all nodes for a project or user.
 
 **Query Parameters:**
+
 - `project` (optional): Filter by project ID
 - `type` (optional): Filter by node type
 - `page` (optional): Page number (default: 1)
@@ -133,6 +149,7 @@ Get all nodes for a project or user.
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -175,11 +192,13 @@ Get all nodes for a project or user.
 ```
 
 ### POST /api/nodes
+
 Create a new node.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "name": "My Custom Node",
@@ -205,6 +224,7 @@ Create a new node.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -224,11 +244,13 @@ Create a new node.
 ```
 
 ### GET /api/nodes/:id
+
 Get a specific node by ID.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -248,6 +270,7 @@ Get a specific node by ID.
 ```
 
 ### PUT /api/nodes/:id
+
 Update an existing node.
 
 **Headers:** `Authorization: Bearer <token>`
@@ -255,6 +278,7 @@ Update an existing node.
 **Request Body:** (same as POST /api/nodes)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -274,11 +298,13 @@ Update an existing node.
 ```
 
 ### DELETE /api/nodes/:id
+
 Delete a node.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -287,11 +313,13 @@ Delete a node.
 ```
 
 ### POST /api/nodes/:id/clone
+
 Clone a node as a new instance.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "name": "Cloned Node Name",
@@ -300,6 +328,7 @@ Clone a node as a new instance.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -320,11 +349,13 @@ Clone a node as a new instance.
 ```
 
 ### POST /api/nodes/:id/test
+
 Test a node's functionality.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "testData": {
@@ -335,6 +366,7 @@ Test a node's functionality.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -350,9 +382,11 @@ Test a node's functionality.
 ## Template Endpoints
 
 ### GET /api/templates
+
 Get all available templates.
 
 **Query Parameters:**
+
 - `category` (optional): Filter by category
 - `type` (optional): Filter by node type
 - `public` (optional): Include public templates
@@ -362,6 +396,7 @@ Get all available templates.
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -396,11 +431,13 @@ Get all available templates.
 ```
 
 ### POST /api/templates
+
 Create a new template.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "name": "Custom API Template",
@@ -424,6 +461,7 @@ Create a new template.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -446,11 +484,13 @@ Create a new template.
 ## Project Endpoints
 
 ### GET /api/projects
+
 Get all projects for the current user/organization.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -478,11 +518,13 @@ Get all projects for the current user/organization.
 ```
 
 ### POST /api/projects
+
 Create a new project.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "name": "New Project",
@@ -491,6 +533,7 @@ Create a new project.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -514,11 +557,13 @@ Create a new project.
 ```
 
 ### POST /api/projects/:id/invite
+
 Invite a user to join a project.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -527,6 +572,7 @@ Invite a user to join a project.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -543,16 +589,19 @@ Invite a user to join a project.
 ## Admin Endpoints
 
 ### GET /api/admin/users
+
 Get all users (Admin only).
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Query Parameters:**
+
 - `page` (optional): Page number
 - `limit` (optional): Items per page
 - `organization` (optional): Filter by organization
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -575,11 +624,13 @@ Get all users (Admin only).
 ```
 
 ### PUT /api/admin/users/:id/role
+
 Update user role (Admin only).
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "role": "admin"
@@ -587,6 +638,7 @@ Update user role (Admin only).
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -604,17 +656,17 @@ Update user role (Admin only).
 
 ## Error Codes
 
-| Code | Message | Description |
-|------|---------|-------------|
-| AUTH_001 | Invalid credentials | Email or password is incorrect |
-| AUTH_002 | Token expired | JWT token has expired |
-| AUTH_003 | Insufficient permissions | User lacks required permissions |
-| NODE_001 | Node not found | Requested node does not exist |
-| NODE_002 | Invalid node data | Node validation failed |
-| PROJ_001 | Project not found | Requested project does not exist |
-| TEMP_001 | Template not found | Requested template does not exist |
-| VALID_001 | Validation error | Request data validation failed |
-| SERVER_001 | Internal server error | Unexpected server error |
+| Code       | Message                  | Description                       |
+| ---------- | ------------------------ | --------------------------------- |
+| AUTH_001   | Invalid credentials      | Email or password is incorrect    |
+| AUTH_002   | Token expired            | JWT token has expired             |
+| AUTH_003   | Insufficient permissions | User lacks required permissions   |
+| NODE_001   | Node not found           | Requested node does not exist     |
+| NODE_002   | Invalid node data        | Node validation failed            |
+| PROJ_001   | Project not found        | Requested project does not exist  |
+| TEMP_001   | Template not found       | Requested template does not exist |
+| VALID_001  | Validation error         | Request data validation failed    |
+| SERVER_001 | Internal server error    | Unexpected server error           |
 
 ## Rate Limiting
 
@@ -626,10 +678,12 @@ Update user role (Admin only).
 ## Pagination
 
 All list endpoints support pagination with the following parameters:
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 20, max: 100)
 
 Response includes pagination metadata:
+
 ```json
 {
   "pagination": {

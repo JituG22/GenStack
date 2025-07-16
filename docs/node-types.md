@@ -9,10 +9,12 @@ GenStack supports various node types that represent different components, APIs, 
 ### 1. Frontend Components
 
 #### React Component Node
+
 **Type**: `react`
 **Category**: `frontend`
 
 **Template Structure:**
+
 ```javascript
 import React from 'react';
 {{#if imports}}
@@ -23,15 +25,15 @@ const {{componentName}} = ({{#if props}}{{props}}{{else}}{}{{/if}}) => {
   {{#if state}}
   {{state}}
   {{/if}}
-  
+
   {{#if effects}}
   {{effects}}
   {{/if}}
-  
+
   {{#if handlers}}
   {{handlers}}
   {{/if}}
-  
+
   return (
     {{jsx}}
   );
@@ -41,6 +43,7 @@ export default {{componentName}};
 ```
 
 **Properties Schema:**
+
 ```json
 {
   "componentName": {
@@ -85,21 +88,22 @@ export default {{componentName}};
 ```
 
 **Example Output:**
+
 ```javascript
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 const UserCard = ({ user, onEdit }) => {
   const [isEditing, setIsEditing] = useState(false);
-  
+
   useEffect(() => {
-    console.log('User card mounted');
+    console.log("User card mounted");
   }, []);
-  
+
   const handleEditClick = () => {
     setIsEditing(true);
     onEdit(user.id);
   };
-  
+
   return (
     <div className="user-card">
       <h3>{user.name}</h3>
@@ -113,10 +117,12 @@ export default UserCard;
 ```
 
 #### Angular Component Node
+
 **Type**: `angular`
 **Category**: `frontend`
 
 **Template Structure:**
+
 ```typescript
 import { Component{{#if imports}}, {{imports}}{{/if}} } from '@angular/core';
 
@@ -131,7 +137,7 @@ export class {{componentName}} {
   {{#if properties}}
   {{properties}}
   {{/if}}
-  
+
   {{#if methods}}
   {{methods}}
   {{/if}}
@@ -141,10 +147,12 @@ export class {{componentName}} {
 ### 2. Backend APIs
 
 #### Node.js API Endpoint
+
 **Type**: `nodejs-api`
 **Category**: `backend`
 
 **Template Structure:**
+
 ```javascript
 {{#if imports}}
 {{imports}}
@@ -156,15 +164,15 @@ const {{handlerName}} = async (req, res) => {
     // Middleware
     {{middleware}}
     {{/if}}
-    
+
     {{#if validation}}
     // Validation
     {{validation}}
     {{/if}}
-    
+
     // Handler logic
     {{handlerLogic}}
-    
+
     res.status({{successStatus}}).json({
       success: true,
       data: {{responseData}},
@@ -183,6 +191,7 @@ module.exports = {{handlerName}};
 ```
 
 **Properties Schema:**
+
 ```json
 {
   "handlerName": {
@@ -248,10 +257,12 @@ module.exports = {{handlerName}};
 ```
 
 #### Python FastAPI Endpoint
+
 **Type**: `python-api`
 **Category**: `backend`
 
 **Template Structure:**
+
 ```python
 from fastapi import APIRouter, HTTPException{{#if imports}}, {{imports}}{{/if}}
 {{#if models}}
@@ -271,10 +282,10 @@ async def {{functionName}}({{parameters}}):
         # Validation
         {{validation}}
         {{/if}}
-        
+
         # Handler logic
         {{handlerLogic}}
-        
+
         return {
             "success": True,
             "data": {{responseData}},
@@ -290,36 +301,38 @@ async def {{functionName}}({{parameters}}):
 ### 3. Database Operations
 
 #### MongoDB Query Node
+
 **Type**: `mongodb`
 **Category**: `database`
 
 **Template Structure:**
+
 ```javascript
 const {{operationName}} = async ({{parameters}}) => {
   try {
     const db = await connectToDatabase();
     const collection = db.collection('{{collectionName}}');
-    
+
     {{#if operation === 'find'}}
     const result = await collection.find({{query}}){{#if sort}}.sort({{sort}}){{/if}}{{#if limit}}.limit({{limit}}){{/if}}.toArray();
     {{/if}}
-    
+
     {{#if operation === 'findOne'}}
     const result = await collection.findOne({{query}});
     {{/if}}
-    
+
     {{#if operation === 'insertOne'}}
     const result = await collection.insertOne({{document}});
     {{/if}}
-    
+
     {{#if operation === 'updateOne'}}
     const result = await collection.updateOne({{query}}, {{update}});
     {{/if}}
-    
+
     {{#if operation === 'deleteOne'}}
     const result = await collection.deleteOne({{query}});
     {{/if}}
-    
+
     return result;
   } catch (error) {
     throw new Error(`{{operationName}} failed: ${error.message}`);
@@ -328,28 +341,30 @@ const {{operationName}} = async ({{parameters}}) => {
 ```
 
 #### PostgreSQL Query Node
+
 **Type**: `postgresql`
 **Category**: `database`
 
 **Template Structure:**
+
 ```javascript
 const {{queryName}} = async ({{parameters}}) => {
   const client = await pool.connect();
-  
+
   try {
     {{#if transaction}}
     await client.query('BEGIN');
     {{/if}}
-    
+
     const query = `{{sqlQuery}}`;
     const values = [{{queryValues}}];
-    
+
     const result = await client.query(query, values);
-    
+
     {{#if transaction}}
     await client.query('COMMIT');
     {{/if}}
-    
+
     return result.rows;
   } catch (error) {
     {{#if transaction}}
@@ -365,22 +380,24 @@ const {{queryName}} = async ({{parameters}}) => {
 ### 4. Form Elements
 
 #### Input Field Node
+
 **Type**: `form-input`
 **Category**: `forms`
 
 **Template Structure:**
+
 ```javascript
 import React from 'react';
 
-const {{componentName}} = ({ 
-  value, 
-  onChange, 
-  label, 
-  error, 
+const {{componentName}} = ({
+  value,
+  onChange,
+  label,
+  error,
   required = {{required}},
   disabled = false,
   placeholder = '{{placeholder}}',
-  ...props 
+  ...props
 }) => {
   return (
     <div className="form-field">
@@ -414,10 +431,12 @@ export default {{componentName}};
 ### 5. CI/CD Operations
 
 #### GitHub Action Step
+
 **Type**: `github-action`
 **Category**: `cicd`
 
 **Template Structure:**
+
 ```yaml
 - name: {{stepName}}
   {{#if condition}}
@@ -442,12 +461,14 @@ export default {{componentName}};
 ```
 
 #### Docker Build Step
+
 **Type**: `docker-build`
 **Category**: `cicd`
 
 **Template Structure:**
+
 ```yaml
-- name: {{stepName}}
+- name: { { stepName } }
   run: |
     docker build \
       -t {{imageName}}:{{tag}} \
@@ -458,7 +479,7 @@ export default {{componentName}};
       -f {{dockerfile}} \
       {{/if}}
       {{buildContext}}
-    
+
     {{#if push}}
     docker push {{imageName}}:{{tag}}
     {{/if}}
@@ -469,6 +490,7 @@ export default {{componentName}};
 ### Creating a Custom Node Type
 
 1. **Define the Template Structure**
+
 ```javascript
 const customTemplate = `
 // Your template code here
@@ -477,6 +499,7 @@ const customTemplate = `
 ```
 
 2. **Define Properties Schema**
+
 ```json
 {
   "property1": {
@@ -491,6 +514,7 @@ const customTemplate = `
 ```
 
 3. **Define Validations**
+
 ```json
 [
   {
@@ -504,34 +528,35 @@ const customTemplate = `
 
 ### Node Property Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| `string` | Single line text input | `"Hello World"` |
-| `number` | Numeric input | `42` |
-| `boolean` | Checkbox | `true` |
-| `select` | Dropdown selection | `"option1"` |
-| `textarea` | Multi-line text | `"Line 1\nLine 2"` |
-| `json` | JSON object input | `{"key": "value"}` |
-| `array` | Array input | `["item1", "item2"]` |
-| `file` | File upload | File object |
+| Type       | Description            | Example              |
+| ---------- | ---------------------- | -------------------- |
+| `string`   | Single line text input | `"Hello World"`      |
+| `number`   | Numeric input          | `42`                 |
+| `boolean`  | Checkbox               | `true`               |
+| `select`   | Dropdown selection     | `"option1"`          |
+| `textarea` | Multi-line text        | `"Line 1\nLine 2"`   |
+| `json`     | JSON object input      | `{"key": "value"}`   |
+| `array`    | Array input            | `["item1", "item2"]` |
+| `file`     | File upload            | File object          |
 
 ### Validation Rules
 
-| Rule | Description | Example |
-|------|-------------|---------|
-| `required` | Field must have a value | `{"rule": "required"}` |
-| `min` | Minimum length/value | `{"rule": "min", "value": 5}` |
-| `max` | Maximum length/value | `{"rule": "max", "value": 100}` |
-| `pattern` | Regex pattern | `{"rule": "pattern", "value": "^[A-Z].*"}` |
-| `email` | Valid email format | `{"rule": "email"}` |
-| `url` | Valid URL format | `{"rule": "url"}` |
-| `custom` | Custom validation function | `{"rule": "custom", "value": "functionName"}` |
+| Rule       | Description                | Example                                       |
+| ---------- | -------------------------- | --------------------------------------------- |
+| `required` | Field must have a value    | `{"rule": "required"}`                        |
+| `min`      | Minimum length/value       | `{"rule": "min", "value": 5}`                 |
+| `max`      | Maximum length/value       | `{"rule": "max", "value": 100}`               |
+| `pattern`  | Regex pattern              | `{"rule": "pattern", "value": "^[A-Z].*"}`    |
+| `email`    | Valid email format         | `{"rule": "email"}`                           |
+| `url`      | Valid URL format           | `{"rule": "url"}`                             |
+| `custom`   | Custom validation function | `{"rule": "custom", "value": "functionName"}` |
 
 ## Node Testing
 
 Each node type supports testing functionality:
 
 ### Test Configuration
+
 ```json
 {
   "testConfig": {
@@ -549,7 +574,9 @@ Each node type supports testing functionality:
 ```
 
 ### Test Execution
+
 The system provides a sandboxed environment for testing nodes with:
+
 - Mock database connections
 - Simulated HTTP requests/responses
 - Isolated execution context
@@ -559,6 +586,7 @@ The system provides a sandboxed environment for testing nodes with:
 ## Best Practices
 
 ### Template Design
+
 1. Use clear placeholder names with descriptive comments
 2. Include proper error handling
 3. Follow language-specific conventions
@@ -566,6 +594,7 @@ The system provides a sandboxed environment for testing nodes with:
 5. Include validation and sanitization
 
 ### Property Schema
+
 1. Use descriptive property names
 2. Provide helpful descriptions
 3. Set appropriate default values
@@ -573,6 +602,7 @@ The system provides a sandboxed environment for testing nodes with:
 5. Group related properties
 
 ### Validation Rules
+
 1. Validate all user inputs
 2. Provide clear error messages
 3. Use appropriate validation types
@@ -580,6 +610,7 @@ The system provides a sandboxed environment for testing nodes with:
 5. Test edge cases
 
 ### Performance
+
 1. Optimize template rendering
 2. Minimize property complexity
 3. Use efficient validation logic

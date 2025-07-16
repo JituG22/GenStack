@@ -55,29 +55,34 @@ Database (MongoDB)
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-username/genstack.git
    cd genstack
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm run install:all
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp backend/.env.example backend/.env
    # Edit backend/.env with your MongoDB connection and other configs
    ```
 
 4. **Setup database**
+
    ```bash
    npm run setup
    npm run seed
    ```
 
 5. **Start development servers**
+
    ```bash
    npm run dev
    ```
