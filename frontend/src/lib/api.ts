@@ -2,11 +2,72 @@ import { AuthResponse, User, LoginRequest, RegisterRequest } from "../types";
 
 const API_BASE_URL = "/api";
 
+// Enhanced API response types
+export interface PaginatedResponse<T> {
+  success: boolean;
+  message: string;
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+  sort?: {
+    sortBy: string;
+    sortOrder: string;
+  };
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+export interface ValidationError {
+  success: false;
+  message: string;
+  errors: Array<{
+    type: string;
+    value: any;
+    msg: string;
+    path: string;
+    location: string;
+  }>;
+}
+
+// Query parameters for list endpoints
+export interface QueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  [key: string]: any; // For entity-specific filters
+}
+
 class ApiError extends Error {
   constructor(message: string, public status: number, public response?: any) {
     super(message);
     this.name = "ApiError";
   }
+}
+
+// Helper function to build query string
+function buildQueryString(params: QueryParams): string {
+  const searchParams = new URLSearchParams();
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      searchParams.append(key, value.toString());
+    }
+  });
+  
+  const queryString = searchParams.toString();
+  return queryString ? `?${queryString}` : '';
 }
 
 async function fetchApi<T>(
@@ -65,83 +126,105 @@ export const authApi = {
   },
 };
 
-// Nodes API
+// Enhanced Nodes API
 export const nodesApi = {
-  async getNodes() {
-    return fetchApi("/nodes");
+  async getNodes(params: QueryParams = {}): Promise<PaginatedResponse<any>> {
+    const queryString = buildQueryString(params);
+    return fetchApi<PaginatedResponse<any>>(`/nodes${queryString}`);
   },
 
-  async createNode(nodeData: any) {
-    return fetchApi("/nodes", {
+  async getNode(id: string): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/nodes/${id}`);
+  },
+
+  async createNode(nodeData: any): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>("/nodes", {
       method: "POST",
       body: JSON.stringify(nodeData),
     });
   },
 
-  async updateNode(id: string, nodeData: any) {
-    return fetchApi(`/nodes/${id}`, {
+  async updateNode(id: string, nodeData: any): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/nodes/${id}`, {
       method: "PUT",
       body: JSON.stringify(nodeData),
     });
   },
 
-  async deleteNode(id: string) {
-    return fetchApi(`/nodes/${id}`, {
+  async deleteNode(id: string): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/nodes/${id}`, {
       method: "DELETE",
     });
   },
 };
 
-// Templates API
+// Enhanced Templates API
 export const templatesApi = {
-  async getTemplates() {
-    return fetchApi("/templates");
+  async getTemplates(params: QueryParams = {}): Promise<PaginatedResponse<any>> {
+    const queryString = buildQueryString(params);
+    return fetchApi<PaginatedResponse<any>>(`/templates${queryString}`);
   },
 
-  async createTemplate(templateData: any) {
-    return fetchApi("/templates", {
+  async getTemplate(id: string): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/templates/${id}`);
+  },
+
+  async createTemplate(templateData: any): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>("/templates", {
       method: "POST",
       body: JSON.stringify(templateData),
     });
   },
 
-  async updateTemplate(id: string, templateData: any) {
-    return fetchApi(`/templates/${id}`, {
+  async updateTemplate(id: string, templateData: any): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/templates/${id}`, {
       method: "PUT",
       body: JSON.stringify(templateData),
     });
   },
 
-  async deleteTemplate(id: string) {
-    return fetchApi(`/templates/${id}`, {
+  async deleteTemplate(id: string): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/templates/${id}`, {
       method: "DELETE",
     });
   },
 };
 
-// Projects API
+// Enhanced Projects API
 export const projectsApi = {
-  async getProjects() {
-    return fetchApi("/projects");
+  async getProjects(params: QueryParams = {}): Promise<PaginatedResponse<any>> {
+    const queryString = buildQueryString(params);
+    return fetchApi<PaginatedResponse<any>>(`/projects${queryString}`);
   },
 
-  async createProject(projectData: any) {
-    return fetchApi("/projects", {
+  async getProject(id: string): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/projects/${id}`);
+  },
+
+  async createProject(projectData: any): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>("/projects", {
       method: "POST",
       body: JSON.stringify(projectData),
     });
   },
 
-  async updateProject(id: string, projectData: any) {
-    return fetchApi(`/projects/${id}`, {
+  async updateProject(id: string, projectData: any): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/projects/${id}`, {
       method: "PUT",
       body: JSON.stringify(projectData),
     });
   },
 
-  async deleteProject(id: string) {
-    return fetchApi(`/projects/${id}`, {
+  async deleteProject(id: string): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/projects/${id}`, {
       method: "DELETE",
+    });
+  },
+
+  async bulkDeleteProjects(ids: string[]): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>("/projects/bulk", {
+      method: "DELETE",
+      body: JSON.stringify({ ids }),
     });
   },
 };

@@ -2,27 +2,97 @@ import { Router, Response } from "express";
 import { auth } from "../middleware/auth";
 import { Node } from "../models/Node-simple";
 import { AuthRequest } from "../types";
+import {
+  validateNode,
+  validatePagination,
+  validateObjectId,
+  handleValidationErrors,
+} from "../middleware/validation";
 
 const router = Router();
 
 // @route   GET /api/nodes
-// @desc    Get all nodes for user's organization
+// @desc    Get all nodes for user's organization with pagination and search
 // @access  Private
 router.get(
   "/",
   auth,
+  validatePagination,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const nodes = await Node.find({
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string;
+      const type = req.query.type as string;
+      const category = req.query.category as string;
+      const isActive = req.query.isActive as string;
+      const sortBy = (req.query.sortBy as string) || "createdAt";
+      const sortOrder = (req.query.sortOrder as string) || "desc";
+      const skip = (page - 1) * limit;
+
+      // Build search query
+      let searchQuery: any = {
         organization: req.user!.organization,
-      })
+      };
+
+      if (search) {
+        searchQuery.$or = [
+          { name: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+          { tags: { $in: [new RegExp(search, "i")] } },
+        ];
+      }
+
+      if (type) {
+        searchQuery.type = type;
+      }
+
+      if (category) {
+        searchQuery.category = category;
+      }
+
+      if (isActive !== undefined) {
+        searchQuery.isActive = isActive === "true";
+      }
+
+      // Build sort object
+      const validSortFields = [
+        "name",
+        "createdAt",
+        "updatedAt",
+        "type",
+        "category",
+      ];
+      const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+      const sort: any = {};
+      sort[sortField] = sortOrder === "asc" ? 1 : -1;
+
+      // Get total count for pagination
+      const total = await Node.countDocuments(searchQuery);
+
+      // Get nodes with pagination
+      const nodes = await Node.find(searchQuery)
         .populate("createdBy", "firstName lastName email")
-        .sort({ createdAt: -1 });
+        .sort(sort)
+        .skip(skip)
+        .limit(limit);
 
       res.json({
         success: true,
         message: "Nodes retrieved successfully",
         data: nodes,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasNext: page * limit < total,
+          hasPrev: page > 1,
+        },
+        sort: {
+          sortBy: sortField,
+          sortOrder,
+        },
       });
     } catch (error: any) {
       console.error("Get nodes error:", error);
@@ -41,6 +111,7 @@ router.get(
 router.post(
   "/",
   auth,
+  validateNode,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const nodeData = {
@@ -75,6 +146,7 @@ router.post(
 router.get(
   "/:id",
   auth,
+  validateObjectId,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const node = await Node.findOne({
@@ -112,6 +184,8 @@ router.get(
 router.put(
   "/:id",
   auth,
+  validateNode,
+  handleValidationErrors,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const node = await Node.findOneAndUpdate(

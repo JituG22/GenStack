@@ -28,6 +28,49 @@ All API responses follow this structure:
 }
 ```
 
+**Enhanced Features:**
+
+- **Pagination Support**: List endpoints support pagination with metadata
+- **Search Functionality**: Text search across name, description, and tags
+- **Input Validation**: Comprehensive validation with detailed error messages
+- **Filtering**: Category, status, and type-based filtering
+
+### Pagination Response Format
+
+```json
+{
+  "success": true,
+  "data": [...],
+  "message": "Success message",
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 25,
+    "pages": 3,
+    "hasNext": true,
+    "hasPrev": false
+  }
+}
+```
+
+### Validation Error Response
+
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "type": "field",
+      "value": "invalid_value",
+      "msg": "Error description",
+      "path": "field_name",
+      "location": "body"
+    }
+  ]
+}
+```
+
 Error responses:
 
 ```json
@@ -41,6 +84,23 @@ Error responses:
   "timestamp": "2024-01-01T00:00:00.000Z"
 }
 ```
+
+## Query Parameters for List Endpoints
+
+### Pagination Parameters
+
+- `page` (integer, default: 1): Page number
+- `limit` (integer, default: 10, max: 100): Items per page
+
+### Search Parameters
+
+- `search` (string): Search across name, description, and tags
+
+### Filter Parameters
+
+- Node-specific: `type`, `category`, `isActive`
+- Project-specific: `status`
+- Template-specific: `category`, `isPublic`
 
 ## Authentication Endpoints
 

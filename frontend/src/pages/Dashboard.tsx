@@ -1,42 +1,211 @@
+import { useState } from 'react';
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useProjects } from "../hooks/useProjects";
+import { usePaginatedData } from '../hooks/usePaginatedData';
+import { projectsApi, nodesApi, templatesApi } from '../lib/api';
+import DataTable from '../components/DataTable';
 import {
   PlusIcon,
   DocumentIcon,
   CubeIcon,
   UserGroupIcon,
-  ClockIcon,
 } from "@heroicons/react/24/outline";
 
-export function Dashboard() {
+export default function Dashboard() {
   const { user } = useAuth();
-  const { projects, isLoading } = useProjects();
+  const [activeTab, setActiveTab] = useState<'projects' | 'nodes' | 'templates'>('projects');
 
-  const recentProjects = projects.slice(0, 5);
+  // Projects data
+  const projectsData = usePaginatedData(projectsApi.getProjects, {
+    defaultLimit: 5,
+    defaultSortBy: 'updatedAt',
+  });
+
+  // Nodes data  
+  const nodesData = usePaginatedData(nodesApi.getNodes, {
+    defaultLimit: 5,
+    defaultSortBy: 'createdAt',
+  });
+
+  // Templates data
+  const templatesData = usePaginatedData(templatesApi.getTemplates, {
+    defaultLimit: 5,
+    defaultSortBy: 'downloads',
+  });
+
+  const getCurrentData = () => {
+    switch (activeTab) {
+      case 'projects': return projectsData;
+      case 'nodes': return nodesData;
+      case 'templates': return templatesData;
+      default: return projectsData;
+    }
+  };
 
   const stats = [
     {
       name: "Total Projects",
-      value: projects.length,
+      value: projectsData.pagination?.total || 0,
       icon: DocumentIcon,
       color: "bg-blue-500",
+      change: "+12%",
+      changeType: "increase" as const,
     },
     {
-      name: "Total Nodes",
-      value: projects.reduce((acc, project) => acc + project.nodeCount, 0),
+      name: "Total Nodes", 
+      value: nodesData.pagination?.total || 0,
       icon: CubeIcon,
       color: "bg-green-500",
+      change: "+8%",
+      changeType: "increase" as const,
     },
     {
-      name: "Team Members",
-      value: projects.reduce((acc, project) => acc + project.members.length, 0),
+      name: "Templates",
+      value: templatesData.pagination?.total || 0,
       icon: UserGroupIcon,
       color: "bg-purple-500",
+      change: "+23%",
+      changeType: "increase" as const,
     },
   ];
 
-  if (isLoading) {
+  const projectColumns = [
+    {
+      key: 'name',
+      title: 'Project Name',
+      sortable: true,
+      render: (value: string) => (
+        <div className="flex items-center">
+          <div className="flex-shrink-0 h-8 w-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+            <DocumentIcon className="h-4 w-4 text-indigo-600" />
+          </div>
+          <div className="ml-3">
+            <div className="text-sm font-medium text-gray-900">{value}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      title: 'Status',
+      sortable: true,
+      render: (value: string) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+          value === 'active' ? 'bg-green-100 text-green-800' :
+          value === 'completed' ? 'bg-blue-100 text-blue-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {value}
+        </span>
+      ),
+    },
+    {
+      key: 'createdBy',
+      title: 'Created By',
+      render: (value: any) => value ? `${value.firstName} ${value.lastName}` : 'Unknown',
+    },
+    {
+      key: 'updatedAt',
+      title: 'Last Updated',
+      sortable: true,
+      render: (value: string) => new Date(value).toLocaleDateString(),
+    },
+  ];
+
+  const nodeColumns = [
+    {
+      key: 'name',
+      title: 'Node Name',
+      sortable: true,
+      render: (value: string, item: any) => (
+        <div className="flex items-center">
+          <div className="flex-shrink-0 h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
+            <CubeIcon className="h-4 w-4 text-green-600" />
+          </div>
+          <div className="ml-3">
+            <div className="text-sm font-medium text-gray-900">{value}</div>
+            <div className="text-sm text-gray-500">{item.type}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'category',
+      title: 'Category',
+      sortable: true,
+    },
+    {
+      key: 'isActive',
+      title: 'Status',
+      render: (value: boolean) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+          value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {value ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      title: 'Created',
+      sortable: true,
+      render: (value: string) => new Date(value).toLocaleDateString(),
+    },
+  ];
+
+  const templateColumns = [
+    {
+      key: 'name',
+      title: 'Template Name',
+      sortable: true,
+      render: (value: string, item: any) => (
+        <div className="flex items-center">
+          <div className="flex-shrink-0 h-8 w-8 bg-purple-100 rounded-lg flex items-center justify-center">
+            <DocumentIcon className="h-4 w-4 text-purple-600" />
+          </div>
+          <div className="ml-3">
+            <div className="text-sm font-medium text-gray-900">{value}</div>
+            <div className="text-sm text-gray-500">{item.category}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'downloads',
+      title: 'Downloads',
+      sortable: true,
+    },
+    {
+      key: 'isPublic',
+      title: 'Visibility',
+      render: (value: boolean) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+          value ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+        }`}>
+          {value ? 'Public' : 'Private'}
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      title: 'Created',
+      sortable: true,
+      render: (value: string) => new Date(value).toLocaleDateString(),
+    },
+  ];
+
+  const getColumns = () => {
+    switch (activeTab) {
+      case 'projects': return projectColumns;
+      case 'nodes': return nodeColumns;
+      case 'templates': return templateColumns;
+      default: return projectColumns;
+    }
+  };
+
+  const currentData = getCurrentData();
+
+  if (projectsData.loading && nodesData.loading && templatesData.loading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
@@ -45,19 +214,26 @@ export function Dashboard() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {user?.firstName}!
-        </h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Here's what's happening with your projects today.
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Welcome back, {user?.firstName}!
+          </h1>
+          <p className="text-gray-600">Here's what's happening with your projects.</p>
+        </div>
+        <Link
+          to="/projects/new"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
+          New Project
+        </Link>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (
           <div
             key={stat.name}
@@ -65,151 +241,141 @@ export function Dashboard() {
           >
             <dt>
               <div className={`absolute ${stat.color} rounded-md p-3`}>
-                <stat.icon className="w-6 h-6 text-white" />
+                <stat.icon className="h-6 w-6 text-white" aria-hidden="true" />
               </div>
               <p className="ml-16 text-sm font-medium text-gray-500 truncate">
                 {stat.name}
               </p>
             </dt>
             <dd className="ml-16 pb-6 flex items-baseline sm:pb-7">
-              <p className="text-2xl font-semibold text-gray-900">
-                {stat.value}
+              <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+              <p className={`ml-2 flex items-baseline text-sm font-semibold ${
+                stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {stat.change}
               </p>
             </dd>
           </div>
         ))}
       </div>
 
+      {/* Tabs */}
+      <div className="bg-white shadow rounded-lg">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8 px-4" aria-label="Tabs">
+            {(['projects', 'nodes', 'templates'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`${
+                  activeTab === tab
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize`}
+              >
+                {tab}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Data Table */}
+        <div className="p-4">
+          <DataTable
+            data={currentData.data}
+            columns={getColumns()}
+            loading={currentData.loading}
+            pagination={currentData.pagination || undefined}
+            sort={currentData.sort ? {
+              sortBy: currentData.sort.sortBy,
+              sortOrder: currentData.sort.sortOrder as 'asc' | 'desc'
+            } : undefined}
+            searchValue={currentData.queryParams.search || ''}
+            onQueryChange={currentData.setQueryParams}
+            selectedItems={currentData.selectedItems}
+            onRowSelect={(item, selected) => {
+              if (selected) {
+                currentData.toggleSelection(item.id);
+              } else {
+                currentData.toggleSelection(item.id);
+              }
+            }}
+            actions={{
+              onView: (item) => console.log('View', item),
+              onEdit: (item) => console.log('Edit', item),
+              onDelete: (item) => console.log('Delete', item),
+            }}
+          />
+        </div>
+      </div>
+
       {/* Quick Actions */}
-      <div className="mb-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">
-          Quick Actions
-        </h2>
+      <div className="bg-white shadow rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
-            to="/projects?action=create"
-            className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            to="/projects/new"
+            className="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
           >
-            <div className="flex-shrink-0">
-              <PlusIcon className="h-10 w-10 text-indigo-600" />
+            <div>
+              <span className="rounded-lg inline-flex p-3 bg-indigo-50 text-indigo-700 ring-4 ring-white">
+                <PlusIcon className="h-6 w-6" aria-hidden="true" />
+              </span>
             </div>
-            <div className="flex-1 min-w-0">
-              <span className="absolute inset-0" />
-              <p className="text-sm font-medium text-gray-900">
-                Create New Project
+            <div className="mt-4">
+              <h3 className="text-lg font-medium">
+                <span className="focus:outline-none">
+                  Create New Project
+                </span>
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Start building your next workflow with our visual editor.
               </p>
-              <p className="text-sm text-gray-500">
-                Start building with drag & drop nodes
+            </div>
+          </Link>
+
+          <Link
+            to="/nodes/new"
+            className="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-green-500 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+          >
+            <div>
+              <span className="rounded-lg inline-flex p-3 bg-green-50 text-green-700 ring-4 ring-white">
+                <CubeIcon className="h-6 w-6" aria-hidden="true" />
+              </span>
+            </div>
+            <div className="mt-4">
+              <h3 className="text-lg font-medium">
+                <span className="focus:outline-none">
+                  Create Custom Node
+                </span>
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Build reusable components for your workflows.
               </p>
             </div>
           </Link>
 
           <Link
             to="/templates"
-            className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-purple-500 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
           >
-            <div className="flex-shrink-0">
-              <CubeIcon className="h-10 w-10 text-green-600" />
+            <div>
+              <span className="rounded-lg inline-flex p-3 bg-purple-50 text-purple-700 ring-4 ring-white">
+                <DocumentIcon className="h-6 w-6" aria-hidden="true" />
+              </span>
             </div>
-            <div className="flex-1 min-w-0">
-              <span className="absolute inset-0" />
-              <p className="text-sm font-medium text-gray-900">
-                Browse Templates
-              </p>
-              <p className="text-sm text-gray-500">
-                Explore pre-built node templates
-              </p>
-            </div>
-          </Link>
-
-          <Link
-            to="/projects"
-            className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <div className="flex-shrink-0">
-              <DocumentIcon className="h-10 w-10 text-purple-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="absolute inset-0" />
-              <p className="text-sm font-medium text-gray-900">
-                View All Projects
-              </p>
-              <p className="text-sm text-gray-500">
-                Manage your existing projects
+            <div className="mt-4">
+              <h3 className="text-lg font-medium">
+                <span className="focus:outline-none">
+                  Browse Templates
+                </span>
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Discover pre-built templates to jumpstart your projects.
               </p>
             </div>
           </Link>
         </div>
-      </div>
-
-      {/* Recent Projects */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-medium text-gray-900">Recent Projects</h2>
-          <Link
-            to="/projects"
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-          >
-            View all
-          </Link>
-        </div>
-
-        {recentProjects.length === 0 ? (
-          <div className="text-center py-12">
-            <DocumentIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">
-              No projects
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Get started by creating a new project.
-            </p>
-            <div className="mt-6">
-              <Link
-                to="/projects?action=create"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-                Create Project
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            <ul className="divide-y divide-gray-200">
-              {recentProjects.map((project) => (
-                <li key={project.id}>
-                  <Link
-                    to={`/projects/${project.id}`}
-                    className="block hover:bg-gray-50 px-4 py-4 sm:px-6"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <DocumentIcon className="h-10 w-10 text-gray-400" />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {project.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {project.description || "No description"}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span>{project.nodeCount} nodes</span>
-                        <span className="flex items-center">
-                          <ClockIcon className="h-4 w-4 mr-1" />
-                          {new Date(project.updatedAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
     </div>
   );
