@@ -1,0 +1,41 @@
+{
+  "name": "genstack",
+  "version": "1.0.0",
+  "description": "GenStack - Drag & Drop Node-based Framework for building applications, APIs, forms, web pages, and CI/CD pipelines",
+  "main": "index.js",
+  "scripts": {
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "start:frontend": "cd frontend && npm start",
+    "start:backend": "cd backend && npm start",
+    "build": "cd frontend && npm run build",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "setup": "node scripts/setup.js",
+    "seed": "node scripts/seed.js"
+  },
+  "keywords": [
+    "low-code",
+    "drag-and-drop",
+    "react",
+    "typescript",
+    "node-templates",
+    "mongodb",
+    "nodejs-api",
+    "react-flow",
+    "ui-builder",
+    "pipeline-builder"
+  ],
+  "author": "GenStack Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}

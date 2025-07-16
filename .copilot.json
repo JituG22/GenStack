@@ -1,0 +1,23 @@
+{
+  "projectName": "GenStack",
+  "goal": "Allow users to drag and drop customizable nodes to build apps, APIs, pipelines and reusable templates.",
+  "keywords": [
+    "low-code",
+    "drag-and-drop",
+    "react",
+    "typescript",
+    "node templates",
+    "mongodb",
+    "nodejs api",
+    "react flow",
+    "ui builder",
+    "pipeline builder"
+  ],
+  "mainTech": [
+    "React",
+    "React Flow",
+    "Node.js",
+    "Express",
+    "MongoDB"
+  ]
+}
