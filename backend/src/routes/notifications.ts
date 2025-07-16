@@ -6,11 +6,16 @@ import { sendSuccess, sendError } from "../utils/response";
 
 const router = Router();
 
+// Extended request interface for authenticated requests
+interface AuthenticatedRequest extends Request {
+  user?: any;
+}
+
 /**
  * Get user notifications with pagination and filtering
  * GET /api/notifications
  */
-router.get("/", auth, async (req: Request, res: Response) => {
+router.get("/", auth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const {
@@ -40,7 +45,7 @@ router.get("/", auth, async (req: Request, res: Response) => {
  * Get notification statistics
  * GET /api/notifications/stats
  */
-router.get("/stats", auth, async (req: Request, res: Response) => {
+router.get("/stats", auth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const stats = await notificationService.getNotificationStats(userId);
@@ -60,215 +65,235 @@ router.get("/stats", auth, async (req: Request, res: Response) => {
  * Mark a specific notification as read
  * PUT /api/notifications/:id/read
  */
-router.put("/:id/read", auth, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user!.id;
+router.put(
+  "/:id/read",
+  auth,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user!.id;
 
-    if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
-      return sendError(res, "Invalid notification ID", 400);
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+        return sendError(res, "Invalid notification ID", 400);
+      }
+
+      const notification = await notificationService.markAsRead(id, userId);
+
+      if (!notification) {
+        return sendError(res, "Notification not found", 404);
+      }
+
+      return sendSuccess(res, notification, "Notification marked as read");
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      return sendError(res, "Failed to mark notification as read", 500);
     }
-
-    const notification = await notificationService.markAsRead(id, userId);
-
-    if (!notification) {
-      return sendError(res, "Notification not found", 404);
-    }
-
-    return sendSuccess(res, notification, "Notification marked as read");
-  } catch (error) {
-    console.error("Error marking notification as read:", error);
-    return sendError(res, "Failed to mark notification as read", 500);
   }
-});
+);
 
 /**
  * Mark all notifications as read
  * PUT /api/notifications/read-all
  */
-router.put("/read-all", auth, async (req: Request, res: Response) => {
-  try {
-    const userId = req.user!.id;
-    const count = await notificationService.markAllAsRead(userId);
+router.put(
+  "/read-all",
+  auth,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const count = await notificationService.markAllAsRead(userId);
 
-    return sendSuccess(
-      res,
-      { markedCount: count },
-      `${count} notifications marked as read`
-    );
-  } catch (error) {
-    console.error("Error marking all notifications as read:", error);
-    return sendError(res, "Failed to mark all notifications as read", 500);
+      return sendSuccess(
+        res,
+        { markedCount: count },
+        `${count} notifications marked as read`
+      );
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      return sendError(res, "Failed to mark all notifications as read", 500);
+    }
   }
-});
+);
 
 /**
  * Archive a notification
  * PUT /api/notifications/:id/archive
  */
-router.put("/:id/archive", auth, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user!.id;
+router.put(
+  "/:id/archive",
+  auth,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user!.id;
 
-    if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
-      return sendError(res, "Invalid notification ID", 400);
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+        return sendError(res, "Invalid notification ID", 400);
+      }
+
+      const success = await notificationService.archiveNotification(id, userId);
+
+      if (!success) {
+        return sendError(res, "Notification not found", 404);
+      }
+
+      return sendSuccess(
+        res,
+        { archived: true },
+        "Notification archived successfully"
+      );
+    } catch (error) {
+      console.error("Error archiving notification:", error);
+      return sendError(res, "Failed to archive notification", 500);
     }
-
-    const success = await notificationService.archiveNotification(id, userId);
-
-    if (!success) {
-      return sendError(res, "Notification not found", 404);
-    }
-
-    return sendSuccess(
-      res,
-      { archived: true },
-      "Notification archived successfully"
-    );
-  } catch (error) {
-    console.error("Error archiving notification:", error);
-    return sendError(res, "Failed to archive notification", 500);
   }
-});
+);
 
 /**
  * Create a custom notification (admin only)
  * POST /api/notifications/create
  */
-router.post("/create", auth, async (req: Request, res: Response) => {
-  try {
-    // Check if user is admin
-    if (req.user!.role !== "admin") {
-      return sendError(res, "Admin access required", 403);
-    }
+router.post(
+  "/create",
+  auth,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      // Check if user is admin
+      if (req.user!.role !== "admin") {
+        return sendError(res, "Admin access required", 403);
+      }
 
-    const {
-      userId,
-      type,
-      title,
-      message,
-      priority = "medium",
-      category,
-      data = {},
-      actionUrl,
-      actionText,
-      scheduledFor,
-      expiresAt,
-      sourceType,
-      sourceId,
-      tags = [],
-      channels = ["app"],
-    } = req.body;
+      const {
+        userId,
+        type,
+        title,
+        message,
+        priority = "medium",
+        category,
+        data = {},
+        actionUrl,
+        actionText,
+        scheduledFor,
+        expiresAt,
+        sourceType,
+        sourceId,
+        tags = [],
+        channels = ["app"],
+      } = req.body;
 
-    // Basic validation
-    if (!userId || !type || !title || !message || !category) {
-      return sendError(
-        res,
-        "Missing required fields: userId, type, title, message, category",
-        400
+      // Basic validation
+      if (!userId || !type || !title || !message || !category) {
+        return sendError(
+          res,
+          "Missing required fields: userId, type, title, message, category",
+          400
+        );
+      }
+
+      const validTypes = [
+        "system",
+        "social",
+        "project",
+        "collaboration",
+        "achievement",
+        "reminder",
+      ];
+      if (!validTypes.includes(type)) {
+        return sendError(res, "Invalid notification type", 400);
+      }
+
+      const notificationData = {
+        userId,
+        type,
+        title,
+        message,
+        priority,
+        category,
+        data,
+        actionUrl,
+        actionText,
+        scheduledFor: scheduledFor ? new Date(scheduledFor) : undefined,
+        expiresAt: expiresAt ? new Date(expiresAt) : undefined,
+        sourceType,
+        sourceId,
+        tags,
+        channels,
+      };
+
+      const notification = await notificationService.createNotification(
+        notificationData
       );
-    }
 
-    const validTypes = [
-      "system",
-      "social",
-      "project",
-      "collaboration",
-      "achievement",
-      "reminder",
-    ];
-    if (!validTypes.includes(type)) {
-      return sendError(res, "Invalid notification type", 400);
+      return sendSuccess(
+        res,
+        notification,
+        "Notification created successfully",
+        201
+      );
+    } catch (error: any) {
+      console.error("Error creating notification:", error);
+      if (error.message === "User not found") {
+        return sendError(res, "Target user not found", 404);
+      }
+      if (error.message === "User has disabled notifications") {
+        return sendError(res, "User has disabled notifications", 400);
+      }
+      return sendError(res, "Failed to create notification", 500);
     }
-
-    const notificationData = {
-      userId,
-      type,
-      title,
-      message,
-      priority,
-      category,
-      data,
-      actionUrl,
-      actionText,
-      scheduledFor: scheduledFor ? new Date(scheduledFor) : undefined,
-      expiresAt: expiresAt ? new Date(expiresAt) : undefined,
-      sourceType,
-      sourceId,
-      tags,
-      channels,
-    };
-
-    const notification = await notificationService.createNotification(
-      notificationData
-    );
-
-    return sendSuccess(
-      res,
-      notification,
-      "Notification created successfully",
-      201
-    );
-  } catch (error: any) {
-    console.error("Error creating notification:", error);
-    if (error.message === "User not found") {
-      return sendError(res, "Target user not found", 404);
-    }
-    if (error.message === "User has disabled notifications") {
-      return sendError(res, "User has disabled notifications", 400);
-    }
-    return sendError(res, "Failed to create notification", 500);
   }
-});
+);
 
 /**
  * Create notification from template (admin only)
  * POST /api/notifications/template
  */
-router.post("/template", auth, async (req: Request, res: Response) => {
-  try {
-    // Check if user is admin
-    if (req.user!.role !== "admin") {
-      return sendError(res, "Admin access required", 403);
-    }
+router.post(
+  "/template",
+  auth,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      // Check if user is admin
+      if (req.user!.role !== "admin") {
+        return sendError(res, "Admin access required", 403);
+      }
 
-    const { templateKey, userId, replacements = {}, options = {} } = req.body;
+      const { templateKey, userId, replacements = {}, options = {} } = req.body;
 
-    if (!templateKey || !userId) {
-      return sendError(res, "TemplateKey and userId are required", 400);
-    }
+      if (!templateKey || !userId) {
+        return sendError(res, "TemplateKey and userId are required", 400);
+      }
 
-    const notification = await notificationService.createFromTemplate(
-      templateKey,
-      userId,
-      replacements,
-      options
-    );
+      const notification = await notificationService.createFromTemplate(
+        templateKey,
+        userId,
+        replacements,
+        options
+      );
 
-    return sendSuccess(
-      res,
-      notification,
-      "Notification created from template",
-      201
-    );
-  } catch (error: any) {
-    console.error("Error creating notification from template:", error);
-    if (error.message.includes("Template not found")) {
-      return sendError(res, "Notification template not found", 404);
+      return sendSuccess(
+        res,
+        notification,
+        "Notification created from template",
+        201
+      );
+    } catch (error: any) {
+      console.error("Error creating notification from template:", error);
+      if (error.message.includes("Template not found")) {
+        return sendError(res, "Notification template not found", 404);
+      }
+      if (error.message === "User not found") {
+        return sendError(res, "Target user not found", 404);
+      }
+      return sendError(res, "Failed to create notification from template", 500);
     }
-    if (error.message === "User not found") {
-      return sendError(res, "Target user not found", 404);
-    }
-    return sendError(res, "Failed to create notification from template", 500);
   }
-});
+);
 
 /**
  * Create bulk notifications (admin only)
  * POST /api/notifications/bulk
  */
-router.post("/bulk", auth, async (req: Request, res: Response) => {
+router.post("/bulk", auth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Check if user is admin
     if (req.user!.role !== "admin") {
@@ -315,7 +340,7 @@ router.post("/bulk", auth, async (req: Request, res: Response) => {
  * Test notification endpoint (development only)
  * POST /api/notifications/test
  */
-router.post("/test", auth, async (req: Request, res: Response) => {
+router.post("/test", auth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Only allow in development
     if (process.env.NODE_ENV === "production") {
@@ -357,38 +382,42 @@ router.post("/test", auth, async (req: Request, res: Response) => {
  * Get available notification templates (admin only)
  * GET /api/notifications/templates
  */
-router.get("/templates", auth, async (req: Request, res: Response) => {
-  try {
-    // Check if user is admin
-    if (req.user!.role !== "admin") {
-      return sendError(res, "Admin access required", 403);
+router.get(
+  "/templates",
+  auth,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      // Check if user is admin
+      if (req.user!.role !== "admin") {
+        return sendError(res, "Admin access required", 403);
+      }
+
+      const templates = [
+        "user_followed",
+        "user_unfollowed",
+        "team_invitation",
+        "project_shared",
+        "project_updated",
+        "project_deadline",
+        "collaboration_invited",
+        "collaboration_started",
+        "collaboration_ended",
+        "achievement_unlocked",
+        "milestone_reached",
+        "system_maintenance",
+        "feature_release",
+        "security_alert",
+        "tutorial_reminder",
+        "inactive_user",
+        "api_key_expiring",
+      ];
+
+      return sendSuccess(res, templates, "Available notification templates");
+    } catch (error) {
+      console.error("Error fetching notification templates:", error);
+      return sendError(res, "Failed to fetch notification templates", 500);
     }
-
-    const templates = [
-      "user_followed",
-      "user_unfollowed",
-      "team_invitation",
-      "project_shared",
-      "project_updated",
-      "project_deadline",
-      "collaboration_invited",
-      "collaboration_started",
-      "collaboration_ended",
-      "achievement_unlocked",
-      "milestone_reached",
-      "system_maintenance",
-      "feature_release",
-      "security_alert",
-      "tutorial_reminder",
-      "inactive_user",
-      "api_key_expiring",
-    ];
-
-    return sendSuccess(res, templates, "Available notification templates");
-  } catch (error) {
-    console.error("Error fetching notification templates:", error);
-    return sendError(res, "Failed to fetch notification templates", 500);
   }
-});
+);
 
 export default router;
