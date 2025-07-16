@@ -1,9 +1,9 @@
-import { Response, NextFunction } from "express";
+import { Response, NextFunction, Request } from "express";
 import { AuthRequest, UserRole } from "../types";
 import { verifyToken } from "../utils/jwt";
 
 export const auth = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -26,7 +26,7 @@ export const auth = async (
 
     // Verify token
     const decoded = verifyToken(token);
-    req.user = {
+    (req as any).user = {
       id: decoded.id,
       email: decoded.email,
       role: decoded.role as UserRole,
@@ -44,8 +44,9 @@ export const auth = async (
 };
 
 export const authorize = (...roles: UserRole[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const authReq = req as any;
+    if (!authReq.user) {
       res.status(401).json({
         success: false,
         error: {
@@ -57,7 +58,7 @@ export const authorize = (...roles: UserRole[]) => {
       return;
     }
 
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes(authReq.user.role)) {
       res.status(403).json({
         success: false,
         error: {

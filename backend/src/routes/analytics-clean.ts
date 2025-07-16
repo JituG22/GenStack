@@ -161,6 +161,9 @@ router.post("/events", auth, async (req: Request, res: Response) => {
       eventLabel,
       userId,
       organizationId,
+      sessionId:
+        (req.headers["x-session-id"] as string) ||
+        `session-${userId}-${Date.now()}`,
       metadata,
       timestamp: new Date(),
     });

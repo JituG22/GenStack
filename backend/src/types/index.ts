@@ -2,7 +2,6 @@ import { Request } from "express";
 
 // User types
 export interface IUser {
-  _id: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -25,12 +24,11 @@ export enum UserRole {
 
 // Organization types
 export interface IOrganization {
-  _id: string;
   name: string;
   description?: string;
-  owner: string;
-  members: string[];
-  projects: string[];
+  owner: any; // ObjectId reference
+  members: any[]; // ObjectId references
+  projects: any[]; // ObjectId references
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
@@ -38,7 +36,6 @@ export interface IOrganization {
 
 // Project types
 export interface IProject {
-  _id: string;
   name: string;
   description?: string;
   organization: string;
@@ -63,7 +60,6 @@ export enum ProjectRole {
 
 // Node types
 export interface INode {
-  _id: string;
   name: string;
   type: NodeType;
   template: string;
@@ -123,7 +119,6 @@ export interface NodeConnection {
 
 // Template types
 export interface ITemplate {
-  _id: string;
   name: string;
   type: NodeType;
   template: string;
@@ -164,13 +159,20 @@ export enum PropertyType {
 }
 
 // Request types
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    role: UserRole;
-    organization: string;
-  };
+export interface AuthUser {
+  id: string;
+  email: string;
+  role: UserRole;
+  organization: string;
+}
+
+export interface AuthRequest {
+  user?: AuthUser;
+  body: any;
+  query: any;
+  params: any;
+  headers: any;
+  sessionID?: string;
 }
 
 // Response types

@@ -10,6 +10,7 @@ import {
   Bars3Icon,
   XMarkIcon,
   ChartBarIcon,
+  WifiIcon,
 } from "@heroicons/react/24/outline";
 
 interface LayoutProps {
@@ -21,6 +22,7 @@ const navigation = [
   { name: "Projects", href: "/projects", icon: DocumentIcon },
   { name: "Templates", href: "/templates", icon: CubeIcon },
   { name: "Analytics", href: "/analytics", icon: ChartBarIcon },
+  { name: "WebSocket Test", href: "/websocket-test", icon: WifiIcon },
 ];
 
 export function Layout({ children }: LayoutProps) {

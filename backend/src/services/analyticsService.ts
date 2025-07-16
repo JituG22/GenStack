@@ -9,6 +9,17 @@ import {
   IUserBehavior,
 } from "../models/Analytics";
 import mongoose from "mongoose";
+import { SimpleWebSocketService } from "./simpleWebSocket";
+
+// Simple WebSocket integration for real-time updates
+let simpleWebSocketServiceInstance: SimpleWebSocketService | null = null;
+
+export const setSimpleWebSocketService = (
+  wsService: SimpleWebSocketService
+) => {
+  simpleWebSocketServiceInstance = wsService;
+  console.log("Simple WebSocket service connected to Analytics Service");
+};
 
 export interface DashboardMetrics {
   totalEvents: number;
@@ -78,41 +89,108 @@ export interface SystemPerformanceStats {
 }
 
 export class AnalyticsService {
-  // Track analytics events
+  // Track analytics events with real-time broadcasting
   async trackEvent(
     eventData: Omit<IAnalyticsEvent, "_id" | "createdAt" | "updatedAt">
   ): Promise<void> {
     try {
       const event = new AnalyticsEvent(eventData);
       await event.save();
+
+      // Broadcast real-time event update via WebSocket
+      if (simpleWebSocketServiceInstance && eventData.organizationId) {
+        simpleWebSocketServiceInstance.broadcastAnalyticsUpdate(
+          eventData.organizationId.toString(),
+          {
+            eventType: eventData.eventType,
+            eventCategory: eventData.eventCategory,
+            eventAction: eventData.eventAction,
+            timestamp: new Date(),
+          }
+        );
+      }
     } catch (error) {
       console.error("Error tracking analytics event:", error);
       // Don't throw error to avoid disrupting main application flow
     }
   }
 
-  // Track performance metrics
+  // Track performance metrics with real-time alerts
   async trackPerformance(
     metricData: Omit<IPerformanceMetric, "_id" | "createdAt" | "updatedAt">
   ): Promise<void> {
     try {
       const metric = new PerformanceMetric(metricData);
       await metric.save();
+
+      // Check for performance alerts and broadcast
+      if (simpleWebSocketServiceInstance && metricData.organizationId) {
+        const shouldAlert = this.checkPerformanceThresholds(metricData);
+        if (shouldAlert) {
+          simpleWebSocketServiceInstance.broadcastPerformanceAlert(
+            metricData.organizationId.toString(),
+            {
+              type: "performance_threshold_exceeded",
+              metricName: metricData.metricName,
+              value: metricData.value,
+              threshold: shouldAlert.threshold,
+              severity: shouldAlert.severity,
+            }
+          );
+        }
+      }
     } catch (error) {
       console.error("Error tracking performance metric:", error);
     }
   }
 
-  // Track filter analytics
+  // Track filter analytics with real-time updates
   async trackFilterUsage(
     filterData: Omit<IFilterAnalytics, "_id" | "createdAt" | "updatedAt">
   ): Promise<void> {
     try {
       const analytics = new FilterAnalytics(filterData);
       await analytics.save();
+
+      // Broadcast filter usage update
+      if (simpleWebSocketServiceInstance && filterData.organizationId) {
+        simpleWebSocketServiceInstance.broadcastAnalyticsUpdate(
+          filterData.organizationId.toString(),
+          {
+            type: "filter_usage",
+            filterType: filterData.filterType,
+            executionTime: filterData.executionTime,
+            resultCount: filterData.resultCount,
+            timestamp: new Date(),
+          }
+        );
+      }
     } catch (error) {
       console.error("Error tracking filter analytics:", error);
     }
+  }
+
+  // Check performance thresholds for alerting
+  private checkPerformanceThresholds(
+    metricData: Omit<IPerformanceMetric, "_id" | "createdAt" | "updatedAt">
+  ): { threshold: number; severity: string } | null {
+    const thresholds = {
+      query: { warning: 1000, critical: 5000 }, // ms
+      request: { warning: 2000, critical: 10000 }, // ms
+      system: { warning: 80, critical: 95 }, // percentage
+      cache: { warning: 50, critical: 20 }, // hit rate percentage
+    };
+
+    const metricThreshold = thresholds[metricData.metricType];
+    if (!metricThreshold) return null;
+
+    if (metricData.value >= metricThreshold.critical) {
+      return { threshold: metricThreshold.critical, severity: "critical" };
+    } else if (metricData.value >= metricThreshold.warning) {
+      return { threshold: metricThreshold.warning, severity: "warning" };
+    }
+
+    return null;
   }
 
   // Track user behavior

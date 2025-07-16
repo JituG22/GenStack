@@ -11,7 +11,7 @@ import config from "./config/environment";
 import { connectDB } from "./config/database";
 import { errorHandler } from "./middleware/errorHandler";
 import { notFound } from "./middleware/notFound";
-import { WebSocketService, webSocketService } from "./services/websocket";
+import { initializeSimpleWebSocket } from "./services/simpleWebSocket";
 
 // Route imports
 import authRoutes from "./routes/auth";
@@ -77,10 +77,10 @@ const startServer = async () => {
     // Connect to database
     await connectDB();
 
-    // Initialize WebSocket service
-    const wsService = new WebSocketService(httpServer);
+    // Initialize Simple WebSocket service
+    const wsService = initializeSimpleWebSocket(httpServer);
     // Make it globally available for API routes
-    (global as any).webSocketService = wsService;
+    (global as any).simpleWebSocketService = wsService;
 
     httpServer.listen(config.port, () => {
       console.log(`🚀 Server running on port ${config.port}`);

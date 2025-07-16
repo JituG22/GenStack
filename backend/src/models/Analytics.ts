@@ -6,8 +6,8 @@ export interface IAnalyticsEvent {
   eventCategory: string;
   eventAction: string;
   eventLabel?: string;
-  userId: string;
-  organizationId: string;
+  userId: mongoose.Types.ObjectId;
+  organizationId: mongoose.Types.ObjectId;
   sessionId: string;
   timestamp: Date;
   metadata: Record<string, any>;
@@ -24,8 +24,8 @@ export interface IPerformanceMetric {
   value: number;
   unit: string;
   timestamp: Date;
-  userId?: string;
-  organizationId: string;
+  userId?: mongoose.Types.ObjectId;
+  organizationId: mongoose.Types.ObjectId;
   metadata: Record<string, any>;
   tags: string[];
 }
@@ -37,8 +37,8 @@ export interface IFilterAnalytics {
   filterConfig: Record<string, any>;
   executionTime: number;
   resultCount: number;
-  userId: string;
-  organizationId: string;
+  userId: mongoose.Types.ObjectId;
+  organizationId: mongoose.Types.ObjectId;
   timestamp: Date;
   successful: boolean;
   errorMessage?: string;
@@ -47,8 +47,8 @@ export interface IFilterAnalytics {
 
 // User Behavior Interface
 export interface IUserBehavior {
-  userId: string;
-  organizationId: string;
+  userId: mongoose.Types.ObjectId;
+  organizationId: mongoose.Types.ObjectId;
   sessionId: string;
   pageViews: Array<{
     page: string;

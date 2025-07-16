@@ -9,6 +9,7 @@ import { ProjectsPage, AnalyticsPage } from "./pages";
 // Components
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import WebSocketTest from "./components/WebSocketTest";
 
 // Providers
 import { AuthProvider } from "./contexts/AuthContext";
@@ -71,6 +72,16 @@ function App() {
                     <ProtectedRoute>
                       <Layout>
                         <AnalyticsPage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/websocket-test"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <WebSocketTest />
                       </Layout>
                     </ProtectedRoute>
                   }

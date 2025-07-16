@@ -251,6 +251,61 @@ export class WebSocketService {
     }
   }
 
+  // Real-time Analytics Methods for Iteration 6
+  public broadcastAnalyticsUpdate(organizationId: string, analyticsData: any) {
+    this.io.to(`org_${organizationId}`).emit("analytics:update", {
+      data: analyticsData,
+      timestamp: new Date(),
+    });
+  }
+
+  public broadcastPerformanceAlert(organizationId: string, alert: any) {
+    this.io.to(`org_${organizationId}`).emit("performance:alert", {
+      alert,
+      timestamp: new Date(),
+    });
+  }
+
+  public broadcastFilterUsageUpdate(organizationId: string, filterData: any) {
+    this.io.to(`org_${organizationId}`).emit("filter:usage_update", {
+      data: filterData,
+      timestamp: new Date(),
+    });
+  }
+
+  public notifyRealTimeEvent(
+    organizationId: string,
+    eventType: string,
+    eventData: any
+  ) {
+    this.io.to(`org_${organizationId}`).emit(`realtime:${eventType}`, {
+      type: eventType,
+      data: eventData,
+      timestamp: new Date(),
+    });
+  }
+
+  // Collaborative Editing Methods
+  public broadcastNodeEdit(projectId: string, editData: any, userId: string) {
+    this.io.to(`project_${projectId}`).emit("node:edit", {
+      ...editData,
+      userId,
+      timestamp: new Date(),
+    });
+  }
+
+  public broadcastCursorPosition(
+    projectId: string,
+    cursorData: any,
+    userId: string
+  ) {
+    this.io.to(`project_${projectId}`).emit("cursor:move", {
+      ...cursorData,
+      userId,
+      timestamp: new Date(),
+    });
+  }
+
   public getConnectedUsersCount(): number {
     return this.connectedUsers.size;
   }
