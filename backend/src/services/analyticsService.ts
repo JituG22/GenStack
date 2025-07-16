@@ -12,12 +12,14 @@ import mongoose from "mongoose";
 import { SimpleWebSocketService } from "./simpleWebSocket";
 
 // Simple WebSocket integration for real-time updates
-let simpleWebSocketServiceInstance: SimpleWebSocketService | null = null;
+function getWebSocketService(): SimpleWebSocketService | null {
+  return (global as any).simpleWebSocketService || null;
+}
 
 export const setSimpleWebSocketService = (
   wsService: SimpleWebSocketService
 ) => {
-  simpleWebSocketServiceInstance = wsService;
+  (global as any).simpleWebSocketService = wsService;
   console.log("Simple WebSocket service connected to Analytics Service");
 };
 
@@ -98,8 +100,9 @@ export class AnalyticsService {
       await event.save();
 
       // Broadcast real-time event update via WebSocket
-      if (simpleWebSocketServiceInstance && eventData.organizationId) {
-        simpleWebSocketServiceInstance.broadcastAnalyticsUpdate(
+      const wsService = getWebSocketService();
+      if (wsService && eventData.organizationId) {
+        wsService.broadcastAnalyticsUpdate(
           eventData.organizationId.toString(),
           {
             eventType: eventData.eventType,
@@ -124,10 +127,11 @@ export class AnalyticsService {
       await metric.save();
 
       // Check for performance alerts and broadcast
-      if (simpleWebSocketServiceInstance && metricData.organizationId) {
+      const wsService = getWebSocketService();
+      if (wsService && metricData.organizationId) {
         const shouldAlert = this.checkPerformanceThresholds(metricData);
         if (shouldAlert) {
-          simpleWebSocketServiceInstance.broadcastPerformanceAlert(
+          wsService.broadcastPerformanceAlert(
             metricData.organizationId.toString(),
             {
               type: "performance_threshold_exceeded",
@@ -153,8 +157,9 @@ export class AnalyticsService {
       await analytics.save();
 
       // Broadcast filter usage update
-      if (simpleWebSocketServiceInstance && filterData.organizationId) {
-        simpleWebSocketServiceInstance.broadcastAnalyticsUpdate(
+      const wsService = getWebSocketService();
+      if (wsService && filterData.organizationId) {
+        wsService.broadcastAnalyticsUpdate(
           filterData.organizationId.toString(),
           {
             type: "filter_usage",

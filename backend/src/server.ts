@@ -19,6 +19,7 @@ import nodeRoutes from "./routes/nodes";
 import templateRoutes from "./routes/templates";
 import projectRoutes from "./routes/projects";
 import adminRoutes from "./routes/admin";
+import websocketTestRoutes from "./routes/websocket-test";
 
 const app = express();
 const httpServer = createServer(app);
@@ -64,6 +65,7 @@ app.use("/api/nodes", nodeRoutes);
 app.use("/api/templates", templateRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/websocket-test", websocketTestRoutes);
 
 // 404 handler
 app.use(notFound);

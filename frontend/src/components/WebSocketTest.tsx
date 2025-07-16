@@ -67,24 +67,77 @@ const WebSocketTest: React.FC = () => {
   };
 
   const sendTestAnalytics = () => {
-    // Simulate direct analytics service call
-    fetch("http://localhost:5000/api/analytics/events", {
+    // Test WebSocket analytics integration via our new API endpoint
+    fetch("http://localhost:5000/api/websocket-test/test-websocket", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-session-id": "test-session-123",
       },
       body: JSON.stringify({
+        organizationId: "test-org-123",
         eventType: "user_action",
-        eventCategory: "testing",
-        eventAction: "api_test",
-        eventLabel: "WebSocket Integration Test",
-        metadata: { source: "frontend_test", timestamp: new Date() },
       }),
     })
       .then((response) => response.json())
-      .then((data) => console.log("Analytics API response:", data))
-      .catch((error) => console.error("Analytics API error:", error));
+      .then((data) => {
+        console.log("WebSocket Analytics API response:", data);
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "api_response",
+            data: { source: "analytics_api", response: data },
+            timestamp: new Date(),
+          },
+        ]);
+      })
+      .catch((error) => {
+        console.error("WebSocket Analytics API error:", error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "api_error",
+            data: { source: "analytics_api", error: error.message },
+            timestamp: new Date(),
+          },
+        ]);
+      });
+  };
+
+  const sendTestPerformanceAlert = () => {
+    // Test performance alert via WebSocket
+    fetch("http://localhost:5000/api/websocket-test/test-performance-alert", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        organizationId: "test-org-123",
+        value: 6000, // This should trigger a critical alert
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Performance Alert API response:", data);
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "api_response",
+            data: { source: "performance_api", response: data },
+            timestamp: new Date(),
+          },
+        ]);
+      })
+      .catch((error) => {
+        console.error("Performance Alert API error:", error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "api_error",
+            data: { source: "performance_api", error: error.message },
+            timestamp: new Date(),
+          },
+        ]);
+      });
   };
 
   return (
@@ -111,21 +164,30 @@ const WebSocketTest: React.FC = () => {
       {/* Test Controls */}
       <div className="mb-6 p-4 rounded-lg border bg-gray-50">
         <h2 className="text-lg font-semibold mb-4">Test Controls</h2>
-        <div className="space-x-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={sendTestEvent}
             disabled={!connected}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
           >
-            Send WebSocket Event
+            Send Direct WebSocket Event
           </button>
           <button
             onClick={sendTestAnalytics}
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
-            Send Analytics API Call
+            Test Analytics WebSocket API
+          </button>
+          <button
+            onClick={sendTestPerformanceAlert}
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Test Performance Alert
           </button>
         </div>
+        <p className="text-sm text-gray-600 mt-3">
+          Use these buttons to test different WebSocket integration scenarios
+        </p>
       </div>
 
       {/* Real-time Messages */}
@@ -167,15 +229,24 @@ const WebSocketTest: React.FC = () => {
         <ol className="text-sm text-yellow-700 space-y-1">
           <li>1. Check that connection status shows "Connected"</li>
           <li>
-            2. Click "Send WebSocket Event" to test direct WebSocket
+            2. Click "Send Direct WebSocket Event" to test direct WebSocket
             communication
           </li>
           <li>
-            3. Click "Send Analytics API Call" to test analytics service
+            3. Click "Test Analytics WebSocket API" to test analytics service
             integration
           </li>
-          <li>4. Watch for real-time messages appearing below</li>
-          <li>5. Open browser console for additional debugging information</li>
+          <li>
+            4. Click "Test Performance Alert" to trigger a performance threshold
+            alert
+          </li>
+          <li>
+            5. Watch for real-time messages appearing in the messages section
+          </li>
+          <li>6. Open browser console for additional debugging information</li>
+          <li>
+            7. Each test should generate different types of WebSocket events
+          </li>
         </ol>
       </div>
     </div>
