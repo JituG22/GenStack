@@ -99,6 +99,16 @@ async function fetchApi<T>(
   return response.json();
 }
 
+// General API instance
+export const api = {
+  get: <T>(endpoint: string) => fetchApi<T>(endpoint),
+  post: <T>(endpoint: string, data?: any) =>
+    fetchApi<T>(endpoint, { method: "POST", body: JSON.stringify(data) }),
+  put: <T>(endpoint: string, data?: any) =>
+    fetchApi<T>(endpoint, { method: "PUT", body: JSON.stringify(data) }),
+  delete: <T>(endpoint: string) => fetchApi<T>(endpoint, { method: "DELETE" }),
+};
+
 // Auth API
 export const authApi = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
@@ -248,6 +258,60 @@ export const projectsApi = {
     return fetchApi<ApiResponse<any>>(
       `/projects/suggestions/${field}${queryString}`
     );
+  },
+};
+
+// Analytics API
+export const analyticsApi = {
+  async getDashboard(timeRange = "7d"): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(
+      `/analytics/dashboard?timeRange=${timeRange}`
+    );
+  },
+
+  async getFilters(timeRange = "7d"): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(
+      `/analytics/filters?timeRange=${timeRange}`
+    );
+  },
+
+  async getPerformance(timeRange = "7d"): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(
+      `/analytics/performance?timeRange=${timeRange}`
+    );
+  },
+
+  async getBehavior(timeRange = "7d"): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(
+      `/analytics/behavior?timeRange=${timeRange}`
+    );
+  },
+
+  async trackEvent(eventData: {
+    eventType: string;
+    eventCategory: string;
+    eventAction: string;
+    eventLabel?: string;
+    metadata?: any;
+  }): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>("/analytics/events", {
+      method: "POST",
+      body: JSON.stringify(eventData),
+    });
+  },
+
+  async trackFilterUsage(filterData: {
+    filterType: string;
+    filterValues: any;
+    appliedFilters: any;
+    resultsCount: number;
+    queryTime: number;
+    queryComplexity?: number;
+  }): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>("/analytics/filter-usage", {
+      method: "POST",
+      body: JSON.stringify(filterData),
+    });
   },
 };
 

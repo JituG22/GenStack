@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
-import { ProjectsPage } from "./pages";
+import { ProjectsPage, AnalyticsPage } from "./pages";
 
 // Components
 import { Layout } from "./components/Layout";
@@ -61,6 +61,16 @@ function App() {
                     <ProtectedRoute>
                       <Layout>
                         <ProjectsPage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/analytics"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <AnalyticsPage />
                       </Layout>
                     </ProtectedRoute>
                   }
