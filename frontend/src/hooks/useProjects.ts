@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Project } from '../types';
-import { projectsApi } from '../lib/api';
+import { useState, useEffect } from "react";
+import { Project } from "../types";
+import { projectsApi } from "../lib/api";
 
 interface UseProjectsReturn {
   projects: Project[];
@@ -24,10 +24,10 @@ export function useProjects(): UseProjectsReturn {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await projectsApi.getProjects() as any;
+      const response = (await projectsApi.getProjects()) as any;
       setProjects(response.data || []);
     } catch (err: any) {
-      setError(err.message || 'Failed to load projects');
+      setError(err.message || "Failed to load projects");
     } finally {
       setIsLoading(false);
     }
@@ -37,12 +37,12 @@ export function useProjects(): UseProjectsReturn {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await projectsApi.createProject(projectData) as any;
+      const response = (await projectsApi.createProject(projectData)) as any;
       const newProject = response.data;
-      setProjects(prev => [...prev, newProject]);
+      setProjects((prev) => [...prev, newProject]);
       return newProject;
     } catch (err: any) {
-      setError(err.message || 'Failed to create project');
+      setError(err.message || "Failed to create project");
       throw err;
     } finally {
       setIsLoading(false);
@@ -53,16 +53,16 @@ export function useProjects(): UseProjectsReturn {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await projectsApi.updateProject(id, updates) as any;
+      const response = (await projectsApi.updateProject(id, updates)) as any;
       const updatedProject = response.data;
-      setProjects(prev =>
-        prev.map(project => project.id === id ? updatedProject : project)
+      setProjects((prev) =>
+        prev.map((project) => (project.id === id ? updatedProject : project))
       );
       if (currentProject?.id === id) {
         setCurrentProject(updatedProject);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to update project');
+      setError(err.message || "Failed to update project");
       throw err;
     } finally {
       setIsLoading(false);
@@ -74,12 +74,12 @@ export function useProjects(): UseProjectsReturn {
       setIsLoading(true);
       setError(null);
       await projectsApi.deleteProject(id);
-      setProjects(prev => prev.filter(project => project.id !== id));
+      setProjects((prev) => prev.filter((project) => project.id !== id));
       if (currentProject?.id === id) {
         setCurrentProject(null);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to delete project');
+      setError(err.message || "Failed to delete project");
       throw err;
     } finally {
       setIsLoading(false);

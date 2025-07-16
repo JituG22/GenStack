@@ -1,6 +1,12 @@
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { User, LoginRequest, RegisterRequest } from '../types';
-import { authApi } from '../lib/api';
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from "react";
+import { User, LoginRequest, RegisterRequest } from "../types";
+import { authApi } from "../lib/api";
 
 interface AuthState {
   user: User | null;
@@ -18,12 +24,12 @@ interface AuthContextType extends AuthState {
 }
 
 type AuthAction =
-  | { type: 'AUTH_START' }
-  | { type: 'AUTH_SUCCESS'; payload: { user: User; token: string } }
-  | { type: 'AUTH_FAILURE'; payload: string }
-  | { type: 'LOGOUT' }
-  | { type: 'CLEAR_ERROR' }
-  | { type: 'LOAD_USER'; payload: { user: User; token: string } };
+  | { type: "AUTH_START" }
+  | { type: "AUTH_SUCCESS"; payload: { user: User; token: string } }
+  | { type: "AUTH_FAILURE"; payload: string }
+  | { type: "LOGOUT" }
+  | { type: "CLEAR_ERROR" }
+  | { type: "LOAD_USER"; payload: { user: User; token: string } };
 
 const initialState: AuthState = {
   user: null,
@@ -35,13 +41,13 @@ const initialState: AuthState = {
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
-    case 'AUTH_START':
+    case "AUTH_START":
       return {
         ...state,
         isLoading: true,
         error: null,
       };
-    case 'AUTH_SUCCESS':
+    case "AUTH_SUCCESS":
       return {
         ...state,
         user: action.payload.user,
@@ -50,7 +56,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isLoading: false,
         error: null,
       };
-    case 'AUTH_FAILURE':
+    case "AUTH_FAILURE":
       return {
         ...state,
         user: null,
@@ -59,16 +65,16 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isLoading: false,
         error: action.payload,
       };
-    case 'LOGOUT':
+    case "LOGOUT":
       return {
         ...initialState,
       };
-    case 'CLEAR_ERROR':
+    case "CLEAR_ERROR":
       return {
         ...state,
         error: null,
       };
-    case 'LOAD_USER':
+    case "LOAD_USER":
       return {
         ...state,
         user: action.payload.user,
@@ -88,41 +94,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Load user from localStorage on mount
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+
     if (token && userData) {
       try {
         const user = JSON.parse(userData);
         dispatch({
-          type: 'LOAD_USER',
+          type: "LOAD_USER",
           payload: { user, token },
         });
       } catch (error) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
       }
     }
   }, []);
 
   const login = async (credentials: LoginRequest) => {
     try {
-      dispatch({ type: 'AUTH_START' });
-      
+      dispatch({ type: "AUTH_START" });
+
       const response = await authApi.login(credentials);
       const { user, token } = response;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
       dispatch({
-        type: 'AUTH_SUCCESS',
+        type: "AUTH_SUCCESS",
         payload: { user, token },
       });
     } catch (error: any) {
       dispatch({
-        type: 'AUTH_FAILURE',
-        payload: error.message || 'Login failed',
+        type: "AUTH_FAILURE",
+        payload: error.message || "Login failed",
       });
       throw error;
     }
@@ -130,35 +136,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (userData: RegisterRequest) => {
     try {
-      dispatch({ type: 'AUTH_START' });
-      
+      dispatch({ type: "AUTH_START" });
+
       const response = await authApi.register(userData);
       const { user, token } = response;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
       dispatch({
-        type: 'AUTH_SUCCESS',
+        type: "AUTH_SUCCESS",
         payload: { user, token },
       });
     } catch (error: any) {
       dispatch({
-        type: 'AUTH_FAILURE',
-        payload: error.message || 'Registration failed',
+        type: "AUTH_FAILURE",
+        payload: error.message || "Registration failed",
       });
       throw error;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    dispatch({ type: 'LOGOUT' });
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    dispatch({ type: "LOGOUT" });
   };
 
   const clearError = () => {
-    dispatch({ type: 'CLEAR_ERROR' });
+    dispatch({ type: "CLEAR_ERROR" });
   };
 
   const value: AuthContextType = {
@@ -169,17 +175,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearError,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

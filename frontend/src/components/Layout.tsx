@@ -1,23 +1,23 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { 
-  HomeIcon, 
-  DocumentIcon, 
-  CubeIcon, 
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  HomeIcon,
+  DocumentIcon,
+  CubeIcon,
   UserIcon,
   Bars3Icon,
-  XMarkIcon
-} from '@heroicons/react/24/outline';
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: HomeIcon },
-  { name: 'Projects', href: '/projects', icon: DocumentIcon },
-  { name: 'Templates', href: '/templates', icon: CubeIcon },
+  { name: "Dashboard", href: "/", icon: HomeIcon },
+  { name: "Projects", href: "/projects", icon: DocumentIcon },
+  { name: "Templates", href: "/templates", icon: CubeIcon },
 ];
 
 export function Layout({ children }: LayoutProps) {
@@ -28,15 +28,22 @@ export function Layout({ children }: LayoutProps) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
     <div className="h-screen flex overflow-hidden bg-gray-100">
       {/* Mobile sidebar */}
-      <div className={`fixed inset-0 flex z-40 md:hidden ${sidebarOpen ? '' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-        
+      <div
+        className={`fixed inset-0 flex z-40 md:hidden ${
+          sidebarOpen ? "" : "hidden"
+        }`}
+      >
+        <div
+          className="fixed inset-0 bg-gray-600 bg-opacity-75"
+          onClick={() => setSidebarOpen(false)}
+        />
+
         <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
           <div className="absolute top-0 right-0 -mr-12 pt-2">
             <button
@@ -47,7 +54,7 @@ export function Layout({ children }: LayoutProps) {
               <XMarkIcon className="h-6 w-6 text-white" />
             </button>
           </div>
-          
+
           <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
             <div className="flex-shrink-0 flex items-center px-4">
               <h1 className="text-xl font-bold text-gray-900">GenStack</h1>
@@ -61,8 +68,8 @@ export function Layout({ children }: LayoutProps) {
                     to={item.href}
                     className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${
                       isActive
-                        ? 'bg-gray-100 text-gray-900'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? "bg-gray-100 text-gray-900"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }`}
                   >
                     <item.icon className="mr-4 h-6 w-6" />
@@ -92,8 +99,8 @@ export function Layout({ children }: LayoutProps) {
                       to={item.href}
                       className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
                         isActive
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          ? "bg-gray-100 text-gray-900"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }`}
                     >
                       <item.icon className="mr-3 h-6 w-6" />
@@ -118,12 +125,10 @@ export function Layout({ children }: LayoutProps) {
           >
             <Bars3Icon className="h-6 w-6" />
           </button>
-          
+
           <div className="flex-1 px-4 flex justify-between">
-            <div className="flex-1 flex">
-              {/* Search could go here */}
-            </div>
-            
+            <div className="flex-1 flex">{/* Search could go here */}</div>
+
             <div className="ml-4 flex items-center md:ml-6">
               {/* Profile dropdown */}
               <div className="ml-3 relative">

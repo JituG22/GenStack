@@ -1,13 +1,13 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useProjects } from '../hooks/useProjects';
-import { 
-  PlusIcon, 
-  DocumentIcon, 
+import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { useProjects } from "../hooks/useProjects";
+import {
+  PlusIcon,
+  DocumentIcon,
   CubeIcon,
   UserGroupIcon,
-  ClockIcon
-} from '@heroicons/react/24/outline';
+  ClockIcon,
+} from "@heroicons/react/24/outline";
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -17,22 +17,22 @@ export function Dashboard() {
 
   const stats = [
     {
-      name: 'Total Projects',
+      name: "Total Projects",
       value: projects.length,
       icon: DocumentIcon,
-      color: 'bg-blue-500',
+      color: "bg-blue-500",
     },
     {
-      name: 'Total Nodes',
+      name: "Total Nodes",
       value: projects.reduce((acc, project) => acc + project.nodeCount, 0),
       icon: CubeIcon,
-      color: 'bg-green-500',
+      color: "bg-green-500",
     },
     {
-      name: 'Team Members',
+      name: "Team Members",
       value: projects.reduce((acc, project) => acc + project.members.length, 0),
       icon: UserGroupIcon,
-      color: 'bg-purple-500',
+      color: "bg-purple-500",
     },
   ];
 
@@ -82,7 +82,9 @@ export function Dashboard() {
 
       {/* Quick Actions */}
       <div className="mb-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">
+          Quick Actions
+        </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             to="/projects?action=create"
@@ -93,8 +95,12 @@ export function Dashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <span className="absolute inset-0" />
-              <p className="text-sm font-medium text-gray-900">Create New Project</p>
-              <p className="text-sm text-gray-500">Start building with drag & drop nodes</p>
+              <p className="text-sm font-medium text-gray-900">
+                Create New Project
+              </p>
+              <p className="text-sm text-gray-500">
+                Start building with drag & drop nodes
+              </p>
             </div>
           </Link>
 
@@ -107,8 +113,12 @@ export function Dashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <span className="absolute inset-0" />
-              <p className="text-sm font-medium text-gray-900">Browse Templates</p>
-              <p className="text-sm text-gray-500">Explore pre-built node templates</p>
+              <p className="text-sm font-medium text-gray-900">
+                Browse Templates
+              </p>
+              <p className="text-sm text-gray-500">
+                Explore pre-built node templates
+              </p>
             </div>
           </Link>
 
@@ -121,8 +131,12 @@ export function Dashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <span className="absolute inset-0" />
-              <p className="text-sm font-medium text-gray-900">View All Projects</p>
-              <p className="text-sm text-gray-500">Manage your existing projects</p>
+              <p className="text-sm font-medium text-gray-900">
+                View All Projects
+              </p>
+              <p className="text-sm text-gray-500">
+                Manage your existing projects
+              </p>
             </div>
           </Link>
         </div>
@@ -139,11 +153,13 @@ export function Dashboard() {
             View all
           </Link>
         </div>
-        
+
         {recentProjects.length === 0 ? (
           <div className="text-center py-12">
             <DocumentIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No projects</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              No projects
+            </h3>
             <p className="mt-1 text-sm text-gray-500">
               Get started by creating a new project.
             </p>
@@ -176,7 +192,7 @@ export function Dashboard() {
                             {project.name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {project.description || 'No description'}
+                            {project.description || "No description"}
                           </div>
                         </div>
                       </div>

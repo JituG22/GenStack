@@ -1,4 +1,5 @@
-import { ApiResponse, PaginationResponse } from '../types';
+import { Response } from "express";
+import { ApiResponse, PaginationResponse } from "../types";
 
 export const createResponse = <T>(
   success: boolean,
@@ -11,8 +12,30 @@ export const createResponse = <T>(
     data,
     message,
     error,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
+};
+
+export const sendSuccess = <T>(
+  res: Response,
+  data?: T,
+  message?: string,
+  statusCode: number = 200
+): Response => {
+  return res.status(statusCode).json(createResponse(true, data, message));
+};
+
+export const sendError = (
+  res: Response,
+  message: string,
+  statusCode: number = 500,
+  errorCode?: string,
+  details?: any
+): Response => {
+  const error = errorCode ? { code: errorCode, message, details } : undefined;
+  return res
+    .status(statusCode)
+    .json(createResponse(false, null, message, error));
 };
 
 export const createPaginationResponse = <T>(
@@ -22,7 +45,7 @@ export const createPaginationResponse = <T>(
   total: number
 ): PaginationResponse<T> => {
   const pages = Math.ceil(total / limit);
-  
+
   return {
     data,
     pagination: {
@@ -31,7 +54,7 @@ export const createPaginationResponse = <T>(
       total,
       pages,
       hasNext: page < pages,
-      hasPrev: page > 1
-    }
+      hasPrev: page > 1,
+    },
   };
 };

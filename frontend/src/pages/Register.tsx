@@ -1,26 +1,26 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { RegisterRequest } from '../types';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { RegisterRequest } from "../types";
 
 export function Register() {
   const [formData, setFormData] = useState<RegisterRequest>({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-    organization: '',
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    organization: "",
   });
-  
+
   const { register, isLoading, error } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       await register(formData);
-      navigate('/');
+      navigate("/");
     } catch (error) {
       // Error is handled by the auth context
     }
@@ -28,7 +28,7 @@ export function Register() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -42,7 +42,7 @@ export function Register() {
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
+            Or{" "}
             <Link
               to="/login"
               className="font-medium text-indigo-600 hover:text-indigo-500"
@@ -51,18 +51,21 @@ export function Register() {
             </Link>
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="text-sm text-red-700">{error}</div>
             </div>
           )}
-          
+
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   First Name
                 </label>
                 <input
@@ -77,7 +80,10 @@ export function Register() {
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Last Name
                 </label>
                 <input
@@ -92,9 +98,12 @@ export function Register() {
                 />
               </div>
             </div>
-            
+
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email Address
               </label>
               <input
@@ -109,9 +118,12 @@ export function Register() {
                 onChange={handleChange}
               />
             </div>
-            
+
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <input
@@ -126,9 +138,12 @@ export function Register() {
                 onChange={handleChange}
               />
             </div>
-            
+
             <div>
-              <label htmlFor="organization" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="organization"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Organization (Optional)
               </label>
               <input
@@ -149,7 +164,7 @@ export function Register() {
               disabled={isLoading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {isLoading ? 'Creating account...' : 'Create account'}
+              {isLoading ? "Creating account..." : "Create account"}
             </button>
           </div>
         </form>

@@ -9,10 +9,10 @@ export interface User {
 }
 
 export enum UserRole {
-  ADMIN = 'admin',
-  ORG_MANAGER = 'org_manager',
-  DEVELOPER = 'developer',
-  VIEWER = 'viewer'
+  ADMIN = "admin",
+  ORG_MANAGER = "org_manager",
+  DEVELOPER = "developer",
+  VIEWER = "viewer",
 }
 
 // Node types
@@ -34,16 +34,16 @@ export interface Node {
 }
 
 export enum NodeType {
-  REACT = 'react',
-  ANGULAR = 'angular',
-  NODEJS_API = 'nodejs-api',
-  PYTHON_API = 'python-api',
-  MONGODB = 'mongodb',
-  POSTGRESQL = 'postgresql',
-  FORM_INPUT = 'form-input',
-  GITHUB_ACTION = 'github-action',
-  DOCKER_BUILD = 'docker-build',
-  CUSTOM = 'custom'
+  REACT = "react",
+  ANGULAR = "angular",
+  NODEJS_API = "nodejs-api",
+  PYTHON_API = "python-api",
+  MONGODB = "mongodb",
+  POSTGRESQL = "postgresql",
+  FORM_INPUT = "form-input",
+  GITHUB_ACTION = "github-action",
+  DOCKER_BUILD = "docker-build",
+  CUSTOM = "custom",
 }
 
 export interface ValidationRule {
@@ -81,9 +81,9 @@ export interface ProjectMember {
 }
 
 export enum ProjectRole {
-  ADMIN = 'admin',
-  EDITOR = 'editor',
-  VIEWER = 'viewer'
+  ADMIN = "admin",
+  EDITOR = "editor",
+  VIEWER = "viewer",
 }
 
 // Template types
@@ -118,14 +118,14 @@ export interface PropertyDefinition {
 }
 
 export enum PropertyType {
-  STRING = 'string',
-  NUMBER = 'number',
-  BOOLEAN = 'boolean',
-  SELECT = 'select',
-  TEXTAREA = 'textarea',
-  JSON = 'json',
-  ARRAY = 'array',
-  FILE = 'file'
+  STRING = "string",
+  NUMBER = "number",
+  BOOLEAN = "boolean",
+  SELECT = "select",
+  TEXTAREA = "textarea",
+  JSON = "json",
+  ARRAY = "array",
+  FILE = "file",
 }
 
 // API Response types

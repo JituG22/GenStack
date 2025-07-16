@@ -1,31 +1,30 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
+import config from "./environment";
 
 export const connectDB = async (): Promise<void> => {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/genstack';
-    
-    const conn = await mongoose.connect(mongoUri);
-    
+    const conn = await mongoose.connect(config.mongodbUri);
+
     console.log(`📦 MongoDB Connected: ${conn.connection.host}`);
-    
+    console.log(`🗃️  Database: ${config.dbName}`);
+
     // Handle connection events
-    mongoose.connection.on('error', (err) => {
-      console.error('MongoDB connection error:', err);
+    mongoose.connection.on("error", (err) => {
+      console.error("MongoDB connection error:", err);
     });
-    
-    mongoose.connection.on('disconnected', () => {
-      console.log('MongoDB disconnected');
+
+    mongoose.connection.on("disconnected", () => {
+      console.log("MongoDB disconnected");
     });
-    
+
     // Graceful shutdown
-    process.on('SIGINT', async () => {
+    process.on("SIGINT", async () => {
       await mongoose.connection.close();
-      console.log('MongoDB connection closed through app termination');
+      console.log("MongoDB connection closed through app termination");
       process.exit(0);
     });
-    
   } catch (error) {
-    console.error('Error connecting to MongoDB:', error);
+    console.error("Error connecting to MongoDB:", error);
     process.exit(1);
   }
 };

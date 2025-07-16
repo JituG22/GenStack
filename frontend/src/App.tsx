@@ -1,17 +1,17 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Pages
-import { Dashboard } from './pages/Dashboard';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
+import { Dashboard } from "./pages/Dashboard";
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
 
 // Components
-import { Layout } from './components/Layout';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import { Layout } from "./components/Layout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Providers
-import { AuthProvider } from './contexts/AuthContext';
-import { NodeProvider } from './contexts/NodeContext';
+import { AuthProvider } from "./contexts/AuthContext";
+import { NodeProvider } from "./contexts/NodeContext";
 
 function App() {
   return (
@@ -23,43 +23,51 @@ function App() {
               {/* Public routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              
+
               {/* Protected routes */}
-              <Route 
-                path="/" 
+              <Route
+                path="/"
                 element={
                   <ProtectedRoute>
                     <Layout>
                       <Dashboard />
                     </Layout>
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/templates" 
+              <Route
+                path="/templates"
                 element={
                   <ProtectedRoute>
                     <Layout>
                       <div className="p-6">
-                        <h1 className="text-2xl font-bold text-gray-900">Templates</h1>
-                        <p className="text-gray-600">Templates page coming soon...</p>
+                        <h1 className="text-2xl font-bold text-gray-900">
+                          Templates
+                        </h1>
+                        <p className="text-gray-600">
+                          Templates page coming soon...
+                        </p>
                       </div>
                     </Layout>
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/projects" 
+              <Route
+                path="/projects"
                 element={
                   <ProtectedRoute>
                     <Layout>
                       <div className="p-6">
-                        <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-                        <p className="text-gray-600">Projects page coming soon...</p>
+                        <h1 className="text-2xl font-bold text-gray-900">
+                          Projects
+                        </h1>
+                        <p className="text-gray-600">
+                          Projects page coming soon...
+                        </p>
                       </div>
                     </Layout>
                   </ProtectedRoute>
-                } 
+                }
               />
             </Routes>
           </div>

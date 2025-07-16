@@ -1,26 +1,44 @@
-import { Response, NextFunction } from 'express';
-import { AuthRequest, UserRole } from '../types';
+import { Response, NextFunction } from "express";
+import { AuthRequest, UserRole } from "../types";
+import { verifyToken } from "../utils/jwt";
 
-export const auth = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const auth = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    // TODO: Implement proper JWT authentication
-    // Mock authentication for now
+    // Get token from header
+    const authHeader = req.header("Authorization");
+    const token =
+      authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : null;
+
+    if (!token) {
+      res.status(401).json({
+        success: false,
+        message: "Access denied. No token provided.",
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    // Verify token
+    const decoded = verifyToken(token);
     req.user = {
-      id: 'mock-user-id',
-      email: 'mock@example.com',
-      role: UserRole.DEVELOPER,
-      organization: 'mock-org-id'
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role as UserRole,
+      organization: decoded.organizationId || "",
     };
 
     next();
   } catch (error) {
     res.status(401).json({
       success: false,
-      error: {
-        code: 'TOKEN_ERROR',
-        message: 'Token is not valid'
-      },
-      timestamp: new Date().toISOString()
+      message: "Invalid token",
+      timestamp: new Date().toISOString(),
     });
   }
 };
@@ -31,10 +49,10 @@ export const authorize = (...roles: UserRole[]) => {
       res.status(401).json({
         success: false,
         error: {
-          code: 'UNAUTHORIZED',
-          message: 'Access denied'
+          code: "UNAUTHORIZED",
+          message: "Access denied",
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return;
     }
@@ -43,10 +61,10 @@ export const authorize = (...roles: UserRole[]) => {
       res.status(403).json({
         success: false,
         error: {
-          code: 'FORBIDDEN',
-          message: 'Insufficient permissions'
+          code: "FORBIDDEN",
+          message: "Insufficient permissions",
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return;
     }
