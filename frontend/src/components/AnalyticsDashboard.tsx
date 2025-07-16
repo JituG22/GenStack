@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { io, Socket } from "socket.io-client";
 import {
   BarChart,
   Bar,
@@ -25,6 +26,14 @@ interface DashboardMetrics {
   };
 }
 
+interface RealTimeEvent {
+  eventType: string;
+  eventCategory: string;
+  eventAction: string;
+  timestamp: Date;
+  type?: string;
+}
+
 interface AnalyticsDashboardProps {
   className?: string;
 }
@@ -36,10 +45,83 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   const [timeRange, setTimeRange] = useState("7d");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [realTimeEvents, setRealTimeEvents] = useState<RealTimeEvent[]>([]);
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connected" | "disconnected" | "connecting"
+  >("disconnected");
 
   useEffect(() => {
     fetchAnalyticsData();
+    initializeWebSocket();
+
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
   }, [timeRange]);
+
+  const initializeWebSocket = () => {
+    setConnectionStatus("connecting");
+    const newSocket = io("http://localhost:5000", {
+      withCredentials: true,
+    });
+
+    newSocket.on("connect", () => {
+      console.log("Analytics Dashboard connected to WebSocket");
+      setConnectionStatus("connected");
+      // Join organization room for real-time updates
+      newSocket.emit("join_organization", "test-org-123");
+    });
+
+    newSocket.on("disconnect", () => {
+      console.log("Analytics Dashboard disconnected from WebSocket");
+      setConnectionStatus("disconnected");
+    });
+
+    // Listen for real-time analytics updates
+    newSocket.on("analytics_update", (data: any) => {
+      console.log("Real-time analytics update:", data);
+      const newEvent: RealTimeEvent = {
+        eventType: data.data?.eventType || data.type || "unknown",
+        eventCategory: data.data?.eventCategory || "real-time",
+        eventAction: data.data?.eventAction || "update",
+        timestamp: new Date(data.timestamp),
+        type: data.type,
+      };
+
+      setRealTimeEvents((prev) => [newEvent, ...prev].slice(0, 10)); // Keep only last 10 events
+
+      // Update metrics if needed
+      if (metrics) {
+        setMetrics((prev) =>
+          prev
+            ? {
+                ...prev,
+                totalEvents: prev.totalEvents + 1,
+              }
+            : null
+        );
+      }
+    });
+
+    // Listen for performance alerts
+    newSocket.on("performance_alert", (data: any) => {
+      console.log("Performance alert received:", data);
+      const alertEvent: RealTimeEvent = {
+        eventType: "performance_alert",
+        eventCategory: "system",
+        eventAction: data.alert?.type || "threshold_exceeded",
+        timestamp: new Date(data.timestamp),
+        type: "performance_alert",
+      };
+
+      setRealTimeEvents((prev) => [alertEvent, ...prev].slice(0, 10));
+    });
+
+    setSocket(newSocket);
+  };
 
   const fetchAnalyticsData = async () => {
     try {
@@ -111,9 +193,30 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     <div className={`p-6 ${className}`}>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Analytics Dashboard
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Analytics Dashboard
+          </h1>
+          <div className="flex items-center mt-2">
+            <div
+              className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                connectionStatus === "connected"
+                  ? "bg-green-500"
+                  : connectionStatus === "connecting"
+                  ? "bg-yellow-500"
+                  : "bg-red-500"
+              }`}
+            ></div>
+            <span className="text-sm text-gray-600">
+              Real-time:{" "}
+              {connectionStatus === "connected"
+                ? "Connected"
+                : connectionStatus === "connecting"
+                ? "Connecting..."
+                : "Disconnected"}
+            </span>
+          </div>
+        </div>
         <div className="flex space-x-2">
           <select
             value={timeRange}
@@ -328,6 +431,67 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <div className="text-sm text-gray-500">Requests/Hour</div>
               </div>
             </div>
+          </div>
+
+          {/* Real-time Events */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Real-time Events
+              </h3>
+              <div
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  connectionStatus === "connected"
+                    ? "bg-green-100 text-green-800"
+                    : connectionStatus === "connecting"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {connectionStatus === "connected"
+                  ? "Live"
+                  : connectionStatus === "connecting"
+                  ? "Connecting"
+                  : "Offline"}
+              </div>
+            </div>
+
+            {realTimeEvents.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">📊</div>
+                <p>Waiting for real-time events...</p>
+                <p className="text-sm">
+                  Try the WebSocket test page to generate events
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {realTimeEvents.map((event, index) => (
+                  <div
+                    key={index}
+                    className={`p-3 rounded border-l-4 ${
+                      event.type === "performance_alert"
+                        ? "border-l-red-500 bg-red-50"
+                        : "border-l-blue-500 bg-blue-50"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium text-sm">
+                          {event.eventCategory} • {event.eventAction}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          Type: {event.eventType}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {event.timestamp.toLocaleTimeString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
