@@ -5,20 +5,23 @@ import morgan from "morgan";
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
+import { createServer } from "http";
 
 import config from "./config/environment";
 import { connectDB } from "./config/database";
 import { errorHandler } from "./middleware/errorHandler";
 import { notFound } from "./middleware/notFound";
+import { WebSocketService, webSocketService } from "./services/websocket";
 
 // Route imports
-import authRoutes from "./routes/auth-basic";
+import authRoutes from "./routes/auth";
 import nodeRoutes from "./routes/nodes";
 import templateRoutes from "./routes/templates";
 import projectRoutes from "./routes/projects";
 import adminRoutes from "./routes/admin";
 
 const app = express();
+const httpServer = createServer(app);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -74,10 +77,16 @@ const startServer = async () => {
     // Connect to database
     await connectDB();
 
-    app.listen(config.port, () => {
+    // Initialize WebSocket service
+    const wsService = new WebSocketService(httpServer);
+    // Make it globally available for API routes
+    (global as any).webSocketService = wsService;
+
+    httpServer.listen(config.port, () => {
       console.log(`🚀 Server running on port ${config.port}`);
       console.log(`🌍 Environment: ${config.nodeEnv}`);
       console.log(`📊 Health check: http://localhost:${config.port}/health`);
+      console.log(`🔄 WebSocket enabled for real-time features`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);

@@ -115,6 +115,16 @@ router.post(
       const project = await Project.create(projectData);
       await project.populate("createdBy", "firstName lastName email");
 
+      // Send real-time notification
+      const wsService = (global as any).webSocketService;
+      if (wsService) {
+        wsService.notifyProjectCreated(
+          req.user!.organization,
+          project,
+          req.user
+        );
+      }
+
       res.status(201).json({
         success: true,
         message: "Project created successfully",
@@ -242,6 +252,16 @@ router.delete(
         organization: req.user!.organization,
       });
 
+      // Send real-time notification for bulk delete
+      const wsService = (global as any).webSocketService;
+      if (wsService) {
+        wsService.notifyBulkProjectsDeleted(
+          req.user!.organization,
+          ids,
+          req.user
+        );
+      }
+
       res.json({
         success: true,
         message: `${result.deletedCount} projects deleted successfully`,
@@ -280,6 +300,16 @@ router.delete(
           message: "Project not found",
         });
         return;
+      }
+
+      // Send real-time notification for single delete
+      const wsService = (global as any).webSocketService;
+      if (wsService) {
+        wsService.notifyProjectDeleted(
+          req.user!.organization,
+          req.params.id,
+          req.user
+        );
       }
 
       res.json({

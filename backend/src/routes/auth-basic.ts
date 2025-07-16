@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { auth } from "../middleware/auth";
-import { User } from "../models/User-basic";
+import { User } from "../models/User";
 import { Organization } from "../models/Organization-basic";
 import { generateToken } from "../utils/jwt";
 

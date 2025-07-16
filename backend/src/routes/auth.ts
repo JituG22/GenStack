@@ -65,18 +65,18 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
     if (organization && organizationId) {
       const org = await Organization.findById(organizationId);
       if (org && !org.owner) {
-        org.owner = user._id;
-        org.members.push(user._id);
+        org.owner = user._id as any;
+        org.members.push(user._id as any);
         await org.save();
-      } else if (org && !org.members.includes(user._id)) {
-        org.members.push(user._id);
+      } else if (org && !org.members.includes(user._id as any)) {
+        org.members.push(user._id as any);
         await org.save();
       }
     }
 
     // Generate JWT
     const token = generateToken({
-      id: user._id.toString(),
+      id: (user._id as any).toString(),
       email: user.email,
       role: user.role,
       organizationId: organizationId?.toString() || "",
@@ -138,7 +138,7 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
 
     // Generate JWT
     const token = generateToken({
-      id: user._id.toString(),
+      id: (user._id as any).toString(),
       email: user.email,
       role: user.role,
       organizationId: user.organization.toString(),
@@ -213,7 +213,7 @@ router.post(
 
       // Generate new token
       const token = generateToken({
-        id: user._id.toString(),
+        id: (user._id as any).toString(),
         email: user.email,
         role: user.role,
         organizationId: user.organization.toString(),

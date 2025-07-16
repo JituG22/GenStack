@@ -1,8 +1,17 @@
 import mongoose, { Schema, Document } from "mongoose";
 import bcrypt from "bcryptjs";
-import { IUser, UserRole } from "../types";
+import { UserRole } from "../types";
 
-interface IUserDocument extends IUser, Document {
+export interface IUserDocument extends Document {
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  role: UserRole;
+  organization: mongoose.Types.ObjectId;
+  projects: mongoose.Types.ObjectId[];
+  lastLogin?: Date;
+  isActive: boolean;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -64,7 +73,7 @@ const UserSchema = new Schema<IUserDocument>(
   {
     timestamps: true,
     toJSON: {
-      transform: function (doc, ret) {
+      transform: function (doc: any, ret: any) {
         ret.id = ret._id;
         delete ret._id;
         delete ret.__v;
@@ -80,7 +89,7 @@ UserSchema.index({ email: 1 });
 UserSchema.index({ organization: 1 });
 
 // Hash password before saving
-UserSchema.pre("save", async function (next) {
+UserSchema.pre<IUserDocument>("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || "12");
