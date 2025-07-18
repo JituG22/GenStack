@@ -6,6 +6,7 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import { createServer } from "http";
+import path from "path";
 
 import config from "./config/environment";
 import { connectDB } from "./config/database";
@@ -69,6 +70,11 @@ app.get("/health", (req, res) => {
     environment: config.nodeEnv,
     version: "1.0.0",
   });
+});
+
+// Root route - serve HTML dashboard
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "index.html"));
 });
 
 // API Routes
