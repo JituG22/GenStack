@@ -256,7 +256,9 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
       id: (user._id as any).toString(),
       email: user.email,
       role: user.role,
-      organizationId: user.organization.toString(),
+      organizationId:
+        (user.organization as any)._id?.toString() ||
+        user.organization.toString(),
     });
 
     // Update last login

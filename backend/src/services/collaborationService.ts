@@ -1,4 +1,4 @@
-import { Server } from "socket.io";
+import { Server, Namespace } from "socket.io";
 import { Server as HttpServer } from "http";
 
 interface CollaborationRoom {
@@ -33,7 +33,7 @@ interface CollaborationEvent {
 }
 
 export class CollaborationService {
-  private io: Server;
+  private io: Server | Namespace;
   private rooms: Map<string, CollaborationRoom> = new Map();
   private userSessions: Map<
     string,
@@ -45,18 +45,23 @@ export class CollaborationService {
     }
   > = new Map();
 
-  constructor(server: HttpServer) {
-    this.io = new Server(server, {
-      cors: {
-        origin: [
-          "http://localhost:3000",
-          "http://localhost:3001",
-          "http://localhost:5173",
-        ],
-        methods: ["GET", "POST"],
-        credentials: true,
-      },
-    });
+  constructor(server: HttpServer, existingIo?: Server) {
+    if (existingIo) {
+      // Use a namespace for collaboration to avoid conflicts
+      this.io = existingIo.of('/collaboration');
+    } else {
+      this.io = new Server(server, {
+        cors: {
+          origin: [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://localhost:5173",
+          ],
+          methods: ["GET", "POST"],
+          credentials: true,
+        },
+      });
+    }
 
     this.setupEventHandlers();
     this.startRoomCleanup();

@@ -143,8 +143,8 @@ const startServer = async () => {
     // Make it globally available for API routes
     (global as any).simpleWebSocketService = wsService;
 
-    // Initialize Collaboration Service
-    const collaborationService = new CollaborationService(httpServer);
+    // Initialize Collaboration Service (reuse the same Socket.IO server)
+    const collaborationService = new CollaborationService(httpServer, wsService.getServer());
     // Make it globally available for API routes
     (global as any).collaborationService = collaborationService;
 

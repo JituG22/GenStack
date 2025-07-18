@@ -100,7 +100,7 @@ export const CollaborativeProvider: React.FC<CollaborativeProviderProps> = ({
   useEffect(() => {
     if (!user) return;
 
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io("http://localhost:5000/collaboration", {
       withCredentials: true,
     });
 

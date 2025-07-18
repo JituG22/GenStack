@@ -296,6 +296,11 @@ export class SimpleWebSocketService {
       timestamp: new Date(),
     });
   }
+
+  // Get the Socket.IO server instance
+  public getServer(): Server {
+    return this.io;
+  }
 }
 
 export let simpleWebSocketService: SimpleWebSocketService;
