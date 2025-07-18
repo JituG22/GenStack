@@ -18,6 +18,56 @@ type FeatureType =
   | "projectsCreated"
   | "collaborativeSessions";
 
+/**
+ * @swagger
+ * /api/users/profile:
+ *   get:
+ *     summary: Get current user profile
+ *     description: Retrieve the complete profile information of the authenticated user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Success'
+ *             example:
+ *               success: true
+ *               data:
+ *                 _id: "64a1b2c3d4e5f6789012345"
+ *                 email: "user@example.com"
+ *                 firstName: "John"
+ *                 lastName: "Doe"
+ *                 organization:
+ *                   _id: "64a1b2c3d4e5f6789012346"
+ *                   name: "GenStack Inc"
+ *                 projects: []
+ *                 teams: []
+ *                 following: []
+ *                 followers: []
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // Get current user profile with all enhanced fields
 router.get(
   "/profile",

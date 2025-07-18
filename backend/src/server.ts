@@ -10,6 +10,7 @@ import path from "path";
 
 import config from "./config/environment";
 import { connectDB } from "./config/database";
+import { setupSwagger } from "./config/swagger";
 import { errorHandler } from "./middleware/errorHandler";
 import { notFound } from "./middleware/notFound";
 import { initializeSimpleWebSocket } from "./services/simpleWebSocket";
@@ -61,6 +62,37 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health check endpoint
+ *     description: Returns the current health status of the API server
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: API is healthy and running
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "GenStack API is running"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 environment:
+ *                   type: string
+ *                   example: "development"
+ *                 version:
+ *                   type: string
+ *                   example: "1.0.0"
+ */
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.status(200).json({
@@ -76,6 +108,9 @@ app.get("/health", (req, res) => {
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "index.html"));
 });
+
+// Setup Swagger Documentation
+setupSwagger(app);
 
 // API Routes
 app.use("/api/auth", authRoutes);
@@ -131,7 +166,10 @@ const startServer = async () => {
       console.log(`🚀 Server running on port ${config.port}`);
       console.log(`🌍 Environment: ${config.nodeEnv}`);
       console.log(`📊 Health check: http://localhost:${config.port}/health`);
-      console.log(`🔄 WebSocket enabled for real-time features`);
+      console.log(
+        `� API Documentation: http://localhost:${config.port}/api-docs`
+      );
+      console.log(`�🔄 WebSocket enabled for real-time features`);
       console.log(`🤝 Collaboration service initialized`);
       console.log(`🔧 Advanced services initialized:`);
       console.log(`   - Operational Transform`);
