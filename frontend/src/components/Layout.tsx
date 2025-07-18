@@ -145,24 +145,34 @@ export function Layout({ children }: LayoutProps) {
               <div className="ml-3 relative">
                 <div className="flex items-center space-x-3 bg-gray-50 rounded-lg px-3 py-2">
                   {/* User Icon */}
-                  <div className="flex-shrink-0">
+                  <div
+                    className="flex-shrink-0"
+                    title={
+                      user?.firstName && user?.lastName && user?.email
+                        ? `${user.firstName} ${user.lastName} (${user.email})`
+                        : "User Profile"
+                    }
+                  >
                     <UserIcon className="h-8 w-8 text-indigo-600" />
                   </div>
-                  
-                  {/* User Name */}
-                  <div className="flex flex-col">
+
+                  {/* User Name - Hidden on small screens */}
+                  <div className="hidden md:flex flex-col">
                     <span className="text-sm font-medium text-gray-900">
-                      {user?.firstName} {user?.lastName}
+                      {user?.firstName && user?.lastName
+                        ? `${user.firstName} ${user.lastName}`
+                        : "Loading..."}
                     </span>
                     <span className="text-xs text-gray-500">
-                      {user?.email}
+                      {user?.email || ""}
                     </span>
                   </div>
-                  
+
                   {/* Logout Button */}
                   <button
                     onClick={handleLogout}
                     className="text-sm text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-200 transition-colors"
+                    title="Logout"
                   >
                     Logout
                   </button>
