@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { NotificationSystem } from "./NotificationSystem";
+import NotificationBell from "./NotificationBell";
 import {
   HomeIcon,
   DocumentIcon,
@@ -137,8 +137,8 @@ export function Layout({ children }: LayoutProps) {
             <div className="flex-1 flex">{/* Search could go here */}</div>
 
             <div className="ml-4 flex items-center md:ml-6">
-              {/* Notification system */}
-              <NotificationSystem />
+              {/* Notification Bell */}
+              <NotificationBell />
 
               {/* Profile dropdown */}
               <div className="ml-3 relative">
