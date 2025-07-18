@@ -29,6 +29,19 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     []
   );
 
+  // Memoize options to prevent unnecessary re-renders
+  const notificationOptions = useMemo(
+    () => ({
+      page: currentPage,
+      limit: 20,
+      unreadOnly: showUnreadOnly,
+      type: selectedType !== "all" ? selectedType : undefined,
+      category: selectedCategory !== "all" ? selectedCategory : undefined,
+      autoRefresh: true,
+    }),
+    [currentPage, showUnreadOnly, selectedType, selectedCategory]
+  );
+
   const {
     notifications,
     unreadCount,
@@ -40,14 +53,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     markAllAsRead,
     archiveNotification,
     refetch,
-  } = useNotifications({
-    page: currentPage,
-    limit: 20,
-    unreadOnly: showUnreadOnly,
-    type: selectedType !== "all" ? selectedType : undefined,
-    category: selectedCategory !== "all" ? selectedCategory : undefined,
-    autoRefresh: true,
-  });
+  } = useNotifications(notificationOptions);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {

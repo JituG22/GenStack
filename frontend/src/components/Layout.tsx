@@ -141,21 +141,31 @@ export function Layout({ children }: LayoutProps) {
               {/* Notification Bell */}
               <NotificationBell />
 
-              {/* Profile dropdown */}
+              {/* Profile section */}
               <div className="ml-3 relative">
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm font-medium text-gray-700">
-                    {user?.firstName} {user?.lastName}
-                  </span>
-                  <div className="flex items-center space-x-2">
-                    <UserIcon className="h-8 w-8 text-gray-400" />
-                    <button
-                      onClick={handleLogout}
-                      className="text-sm text-gray-500 hover:text-gray-700"
-                    >
-                      Logout
-                    </button>
+                <div className="flex items-center space-x-3 bg-gray-50 rounded-lg px-3 py-2">
+                  {/* User Icon */}
+                  <div className="flex-shrink-0">
+                    <UserIcon className="h-8 w-8 text-indigo-600" />
                   </div>
+                  
+                  {/* User Name */}
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900">
+                      {user?.firstName} {user?.lastName}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {user?.email}
+                    </span>
+                  </div>
+                  
+                  {/* Logout Button */}
+                  <button
+                    onClick={handleLogout}
+                    className="text-sm text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-200 transition-colors"
+                  >
+                    Logout
+                  </button>
                 </div>
               </div>
             </div>

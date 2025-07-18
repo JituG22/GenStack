@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   notificationService,
   Notification,
@@ -41,12 +41,27 @@ export const useNotifications = (
 
   const { socket } = useWebSocket();
 
+  // Memoize options to prevent unnecessary re-renders
+  const memoizedOptions = useMemo(
+    () => options,
+    [
+      options.page,
+      options.limit,
+      options.unreadOnly,
+      options.type,
+      options.category,
+      options.autoRefresh,
+    ]
+  );
+
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await notificationService.getNotifications(options);
+      const response = await notificationService.getNotifications(
+        memoizedOptions
+      );
       setNotifications(response.notifications);
       setUnreadCount(response.unreadCount);
       setTotalCount(response.totalCount);
@@ -57,7 +72,7 @@ export const useNotifications = (
     } finally {
       setLoading(false);
     }
-  }, [options]);
+  }, [memoizedOptions]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -132,17 +147,17 @@ export const useNotifications = (
       try {
         await notificationService.archiveNotification(id);
 
-        // Remove from local state
-        setNotifications((prev) =>
-          prev.filter((notification) => notification.id !== id)
-        );
+        // Remove from local state and update unread count if needed
+        setNotifications((prev) => {
+          const notification = prev.find((n) => n.id === id);
+          if (notification && !notification.read) {
+            setUnreadCount((currentUnreadCount) =>
+              Math.max(0, currentUnreadCount - 1)
+            );
+          }
+          return prev.filter((notification) => notification.id !== id);
+        });
         setTotalCount((prev) => prev - 1);
-
-        // Update unread count if it was unread
-        const notification = notifications.find((n) => n.id === id);
-        if (notification && !notification.read) {
-          setUnreadCount((prev) => Math.max(0, prev - 1));
-        }
 
         await fetchStats();
       } catch (err) {
@@ -151,7 +166,7 @@ export const useNotifications = (
         );
       }
     },
-    [notifications, fetchStats]
+    [fetchStats]
   );
 
   const createTestNotification = useCallback(
@@ -187,16 +202,13 @@ export const useNotifications = (
   useEffect(() => {
     fetchNotifications();
     fetchStats();
-  }, [fetchNotifications, fetchStats]);
-
-  // WebSocket listeners for real-time updates
+  }, [fetchNotifications, fetchStats]); // WebSocket listeners for real-time updates
   useEffect(() => {
     if (!socket) return;
 
     const handleNewNotification = (notification: Notification) => {
       setNotifications((prev) => [notification, ...prev]);
       setTotalCount((prev) => prev + 1);
-
       if (!notification.read) {
         setUnreadCount((prev) => prev + 1);
       }
@@ -218,13 +230,16 @@ export const useNotifications = (
         prev.filter((n) => n.id !== data.notificationId)
       );
       setTotalCount((prev) => prev - 1);
-
-      const notification = notifications.find(
-        (n) => n.id === data.notificationId
-      );
-      if (notification && !notification.read) {
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
+      // Check if deleted notification was unread
+      setNotifications((currentNotifications) => {
+        const notification = currentNotifications.find(
+          (n) => n.id === data.notificationId
+        );
+        if (notification && !notification.read) {
+          setUnreadCount((prev) => Math.max(0, prev - 1));
+        }
+        return currentNotifications.filter((n) => n.id !== data.notificationId);
+      });
     };
 
     socket.on("notification:new", handleNewNotification);
@@ -236,18 +251,18 @@ export const useNotifications = (
       socket.off("notification:read", handleNotificationRead);
       socket.off("notification:deleted", handleNotificationDeleted);
     };
-  }, [socket, notifications]);
+  }, [socket]); // Remove notifications dependency
 
   // Auto-refresh if enabled
   useEffect(() => {
-    if (!options.autoRefresh) return;
+    if (!memoizedOptions.autoRefresh) return;
 
     const interval = setInterval(() => {
       fetchUnreadCount();
     }, 30000); // Refresh every 30 seconds
 
     return () => clearInterval(interval);
-  }, [options.autoRefresh, fetchUnreadCount]);
+  }, [memoizedOptions.autoRefresh, fetchUnreadCount]);
 
   return {
     notifications,

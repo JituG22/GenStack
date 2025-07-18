@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   BellIcon,
   CheckIcon,
@@ -21,6 +21,15 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Memoize options to prevent unnecessary re-renders
+  const notificationOptions = useMemo(
+    () => ({
+      limit: 10,
+      autoRefresh: true,
+    }),
+    []
+  );
+
   const {
     notifications,
     unreadCount,
@@ -30,10 +39,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
     markAllAsRead,
     archiveNotification,
     refetch,
-  } = useNotifications({
-    limit: 10,
-    autoRefresh: true,
-  });
+  } = useNotifications(notificationOptions);
 
   // Close dropdown when clicking outside
   useEffect(() => {

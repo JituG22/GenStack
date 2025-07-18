@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 import { auth } from "../middleware/auth";
 import { User } from "../models/User";
 import { Organization } from "../models/Organization";
@@ -81,50 +82,61 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
     if (existingUser) {
       sendError(res, "User already exists with this email", 400);
       return;
-    }
+    } // Password will be hashed by the User model's pre-save hook
+    // No need to hash it manually here
 
-    // Hash password
-    const saltRounds = config.bcryptRounds;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Handle organization
+    // Handle organization - create a temporary organization for the user
     let organizationId;
+    let isNewOrganization = false;
+
     if (organization) {
-      // Try to find existing organization or create new one
+      // Try to find existing organization
       let org = await Organization.findOne({ name: organization });
       if (!org) {
-        // For now, we'll create a temporary organization structure
-        // In a real app, this would be more sophisticated
-        org = await Organization.create({
+        // Create new organization with temporary owner (we'll update it after user creation)
+        org = new Organization({
           name: organization,
-          owner: null, // Will be set after user creation
+          owner: new mongoose.Types.ObjectId(), // Temporary ObjectId
           members: [],
           projects: [],
         });
+        await org.save();
+        isNewOrganization = true;
       }
       organizationId = org._id;
+    } else {
+      // Create a default organization for the user
+      const defaultOrg = new Organization({
+        name: `${firstName} ${lastName}'s Organization`,
+        owner: new mongoose.Types.ObjectId(), // Temporary ObjectId
+        members: [],
+        projects: [],
+      });
+      await defaultOrg.save();
+      organizationId = defaultOrg._id;
+      isNewOrganization = true;
     }
 
-    // Create user first
+    // Create user with organization (password will be hashed by pre-save hook)
     const user = await User.create({
       email,
-      password: hashedPassword,
+      password, // Raw password - will be hashed by User model
       firstName,
       lastName,
       organization: organizationId,
     });
 
-    // If we created a new organization without an existing owner, set this user as owner
-    if (organization && organizationId) {
-      const org = await Organization.findById(organizationId);
-      if (org && !org.owner) {
-        org.owner = user._id as any;
-        org.members.push(user._id as any);
-        await org.save();
-      } else if (org && !org.members.includes(user._id as any)) {
-        org.members.push(user._id as any);
-        await org.save();
-      }
+    // Update organization with the actual user as owner and member
+    if (isNewOrganization) {
+      await Organization.findByIdAndUpdate(organizationId, {
+        owner: user._id,
+        members: [user._id],
+      });
+    } else {
+      // Add user to existing organization members if not already present
+      await Organization.findByIdAndUpdate(organizationId, {
+        $addToSet: { members: user._id },
+      });
     }
 
     // Generate JWT
@@ -233,7 +245,7 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
     }
 
     // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       sendError(res, "Invalid credentials", 401);
       return;
@@ -278,27 +290,23 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
 // @route   GET /api/auth/me
 // @desc    Get current user
 // @access  Private
-router.get(
-  "/me",
-  auth,
-  async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-      const user = await User.findById(req.user?.id)
-        .populate("organization")
-        .select("-password");
+router.get("/me", auth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await User.findById((req as any).user?.id)
+      .populate("organization")
+      .select("-password");
 
-      if (!user) {
-        sendError(res, "User not found", 404);
-        return;
-      }
-
-      sendSuccess(res, user, "User profile retrieved successfully");
-    } catch (error: any) {
-      console.error("Get profile error:", error);
-      sendError(res, "Failed to get user profile", 500);
+    if (!user) {
+      sendError(res, "User not found", 404);
+      return;
     }
+
+    sendSuccess(res, user, "User profile retrieved successfully");
+  } catch (error: any) {
+    console.error("Get profile error:", error);
+    sendError(res, "Failed to get user profile", 500);
   }
-);
+});
 
 // @route   POST /api/auth/refresh
 // @desc    Refresh JWT token
@@ -306,9 +314,10 @@ router.get(
 router.post(
   "/refresh",
   auth,
-  async (req: AuthRequest, res: Response): Promise<void> => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
-      const user = await User.findById(req.user?.id);
+      const userId = (req as any).user?.id;
+      const user = await User.findById(userId);
       if (!user) {
         sendError(res, "User not found", 404);
         return;
