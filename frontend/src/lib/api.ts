@@ -112,17 +112,19 @@ export const api = {
 // Auth API
 export const authApi = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    return fetchApi<AuthResponse>("/auth/login", {
+    const response = await fetchApi<{ data: AuthResponse }>("/auth/login", {
       method: "POST",
       body: JSON.stringify(credentials),
     });
+    return response.data;
   },
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    return fetchApi<AuthResponse>("/auth/register", {
+    const response = await fetchApi<{ data: AuthResponse }>("/auth/register", {
       method: "POST",
       body: JSON.stringify(userData),
     });
+    return response.data;
   },
 
   async getProfile(): Promise<User> {
