@@ -22,6 +22,7 @@ import adminRoutes from "./routes/admin";
 import websocketTestRoutes from "./routes/websocket-test";
 import usersEnhancedRoutes from "./routes/users-enhanced";
 import notificationRoutes from "./routes/notifications";
+import notificationSimpleRoutes from "./routes/notifications-simple";
 import userAnalyticsRoutes from "./routes/user-analytics";
 
 const app = express();
@@ -71,6 +72,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/websocket-test", websocketTestRoutes);
 app.use("/api/users", usersEnhancedRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/notifications-simple", notificationSimpleRoutes);
 app.use("/api/analytics", userAnalyticsRoutes);
 
 // 404 handler
