@@ -25,6 +25,7 @@ const navigation = [
   { name: "Analytics", href: "/analytics", icon: ChartBarIcon },
   { name: "WebSocket Test", href: "/websocket-test", icon: WifiIcon },
   { name: "Collaborative Test", href: "/collaborative-test", icon: UsersIcon },
+  { name: "Collaboration Demo", href: "/collaboration-demo", icon: UsersIcon },
 ];
 
 export function Layout({ children }: LayoutProps) {

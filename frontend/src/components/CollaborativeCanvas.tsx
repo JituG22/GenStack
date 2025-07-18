@@ -1,5 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useCollaborative } from "../contexts/CollaborativeContext";
+import { useWebSocket } from "../contexts/WebSocketContext";
+import { useAuth } from "../contexts/AuthContext";
+import { Users, Eye, MousePointer, Zap, Wifi, WifiOff } from "lucide-react";
 
 interface CollaborativeCanvasProps {
   projectId: string;
@@ -12,6 +15,9 @@ interface CollaborativeCanvasProps {
   }>;
   onNodeMove?: (nodeId: string, position: { x: number; y: number }) => void;
   onNodeSelect?: (nodeId: string | null) => void;
+  onNodeUpdate?: (nodeId: string, updates: any) => void;
+  onNodeCreate?: (node: any) => void;
+  onNodeDelete?: (nodeId: string) => void;
 }
 
 export const CollaborativeCanvas: React.FC<CollaborativeCanvasProps> = ({
@@ -19,6 +25,9 @@ export const CollaborativeCanvas: React.FC<CollaborativeCanvasProps> = ({
   nodes,
   onNodeMove,
   onNodeSelect,
+  onNodeUpdate,
+  onNodeCreate,
+  onNodeDelete,
 }) => {
   const {
     isConnected,
@@ -32,10 +41,18 @@ export const CollaborativeCanvas: React.FC<CollaborativeCanvasProps> = ({
     clearUpdates,
   } = useCollaborative();
 
+  const { socket } = useWebSocket();
+  const { user } = useAuth();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [draggedNode, setDraggedNode] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [userCursors, setUserCursors] = useState<
+    Map<string, { x: number; y: number }>
+  >(new Map());
+  const [connectionState, setConnectionState] = useState<
+    "connected" | "disconnected" | "connecting"
+  >("disconnected");
 
   // Join project on mount
   useEffect(() => {

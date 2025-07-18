@@ -10,6 +10,8 @@ import {
   CollaborativeTestPage,
   EnhancedTemplatesPage,
 } from "./pages";
+import CollaborationDemo from "./pages/CollaborationDemo";
+import MonitoringDemo from "./pages/MonitoringDemo";
 
 // Components
 import { Layout } from "./components/Layout";
@@ -90,6 +92,22 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <CollaborativeTestPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/collaboration-demo"
+                    element={
+                      <ProtectedRoute>
+                        <CollaborationDemo />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/monitoring-demo"
+                    element={
+                      <ProtectedRoute>
+                        <MonitoringDemo />
                       </ProtectedRoute>
                     }
                   />
