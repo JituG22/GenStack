@@ -163,11 +163,85 @@ router.put("/:id", auth, async (req: any, res: Response): Promise<void> => {
  */
 router.delete("/:id", auth, async (req: any, res: Response): Promise<void> => {
   try {
-    res.status(501).json({
-      success: false,
-      error: "Delete with GitHub integration not yet implemented",
+    const { id } = req.params;
+
+    // First, get the project to check if it has GitHub integration
+    const project = await Project.findOne({
+      _id: id,
+      organization: req.user.organization,
+    });
+
+    if (!project) {
+      res.status(404).json({
+        success: false,
+        error: "Project not found",
+      });
+      return;
+    }
+
+    let githubDeletionResult = null;
+
+    // If the project has GitHub integration, delete the repository first
+    if (project.github?.enabled && project.github?.repoName) {
+      try {
+        console.log(`Deleting GitHub repository: ${project.github.repoName}`);
+
+        const deleteResult = await githubService.deleteRepository(
+          project.github.repoName
+        );
+
+        if (deleteResult.success) {
+          githubDeletionResult = {
+            success: true,
+            repositoryName: project.github.repoName,
+            message: "GitHub repository deleted successfully",
+          };
+          console.log(`GitHub repository deleted: ${project.github.repoName}`);
+        } else {
+          console.warn(
+            `Failed to delete GitHub repository: ${deleteResult.error?.message}`
+          );
+          githubDeletionResult = {
+            success: false,
+            repositoryName: project.github.repoName,
+            error:
+              deleteResult.error?.message ||
+              "Failed to delete GitHub repository",
+          };
+        }
+      } catch (githubError: any) {
+        console.error("GitHub repository deletion failed:", githubError);
+        githubDeletionResult = {
+          success: false,
+          repositoryName: project.github.repoName,
+          error: `GitHub deletion failed: ${githubError.message}`,
+        };
+      }
+    }
+
+    // Delete the project from MongoDB regardless of GitHub deletion result
+    await Project.findOneAndDelete({
+      _id: id,
+      organization: req.user.organization,
+    });
+
+    // Send real-time notification
+    const wsService = (global as any).webSocketService;
+    if (wsService) {
+      wsService.notifyProjectDeleted(req.user.organization, id, req.user);
+    }
+
+    res.json({
+      success: true,
+      message: "Project deleted successfully",
+      data: {
+        id,
+        projectName: project.name,
+        github: githubDeletionResult,
+      },
     });
   } catch (error: any) {
+    console.error("Delete project with GitHub error:", error);
     res.status(500).json({
       success: false,
       error: error.message || "Failed to delete project",
