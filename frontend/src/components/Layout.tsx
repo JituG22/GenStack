@@ -12,6 +12,8 @@ import {
   ChartBarIcon,
   WifiIcon,
   UsersIcon,
+  Cog6ToothIcon,
+  RocketLaunchIcon,
 } from "@heroicons/react/24/outline";
 
 interface LayoutProps {
@@ -21,8 +23,19 @@ interface LayoutProps {
 const navigation = [
   { name: "Dashboard", href: "/", icon: HomeIcon },
   { name: "Projects", href: "/projects", icon: DocumentIcon },
+  {
+    name: "Enhanced Projects",
+    href: "/projects-enhanced",
+    icon: RocketLaunchIcon,
+  },
   { name: "Templates", href: "/templates", icon: CubeIcon },
   { name: "Analytics", href: "/analytics", icon: ChartBarIcon },
+  { name: "GitHub Config", href: "/github-config", icon: Cog6ToothIcon },
+  {
+    name: "Integration Demo",
+    href: "/integration-demo",
+    icon: RocketLaunchIcon,
+  },
   { name: "WebSocket Test", href: "/websocket-test", icon: WifiIcon },
   { name: "Collaborative Test", href: "/collaborative-test", icon: UsersIcon },
   { name: "Collaboration Demo", href: "/collaboration-demo", icon: UsersIcon },

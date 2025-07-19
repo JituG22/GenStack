@@ -11,6 +11,9 @@ import NodeDetailPage from "./pages/NodeDetailPage";
 import TemplateDetailPage from "./pages/TemplateDetailPage";
 import CollaborationDemo from "./pages/CollaborationDemo";
 import MonitoringDemo from "./pages/MonitoringDemo";
+import { GitHubConfigPage } from "./pages/GitHubConfigPage";
+import IntegrationDemoPage from "./pages/IntegrationDemoPage";
+import EnhancedProjectsPage from "./pages/EnhancedProjectsPage";
 
 // Components
 import { Layout } from "./components/Layout";
@@ -187,6 +190,36 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <MonitoringDemo />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/github-config"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <GitHubConfigPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/integration-demo"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <IntegrationDemoPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/projects-enhanced"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <EnhancedProjectsPage />
+                        </Layout>
                       </ProtectedRoute>
                     }
                   />
