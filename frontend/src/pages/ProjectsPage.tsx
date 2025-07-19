@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { projectsApi } from "../lib/api";
-import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  TrashIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
 import { AdvancedFilter } from "../components/AdvancedFilter";
 
 interface Project {
@@ -88,6 +92,10 @@ export const ProjectsPage: React.FC = () => {
     } catch (error) {
       console.error("Error deleting project:", error);
     }
+  };
+
+  const handleProjectClick = (projectId: string) => {
+    navigate(`/projects/${projectId}`);
   };
 
   if (loading) {
@@ -239,16 +247,24 @@ export const ProjectsPage: React.FC = () => {
           <ul className="divide-y divide-gray-200">
             {filteredProjects.map((project) => (
               <li key={project.id}>
-                <div className="px-4 py-4 flex items-center justify-between hover:bg-gray-50">
+                <div
+                  className="px-4 py-4 flex items-center justify-between hover:bg-gray-50 hover:shadow-md cursor-pointer transition-all duration-200 border-l-4 border-transparent hover:border-indigo-500"
+                  onClick={() => handleProjectClick(project.id)}
+                >
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-gray-900">
+                      <h3 className="text-lg font-medium text-gray-900 hover:text-indigo-600 transition-colors">
                         {project.name}
                       </h3>
-                      <div className="ml-2 flex-shrink-0">
+                      <div className="ml-2 flex-shrink-0 flex items-center space-x-2">
+                        <ChevronRightIcon className="h-5 w-5 text-gray-400" />
                         <button
-                          onClick={() => handleDeleteProject(project.id)}
-                          className="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent triggering the parent click
+                            handleDeleteProject(project.id);
+                          }}
+                          className="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                          title="Delete project"
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>

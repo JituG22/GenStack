@@ -106,25 +106,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (token && userData) {
         try {
-          // Validate token with backend
+          const user = JSON.parse(userData);
+          console.log("Loading user from localStorage:", {
+            user: user.email,
+            token: token.substring(0, 10) + "...",
+          });
+
+          // Load user immediately from localStorage
+          dispatch({
+            type: "LOAD_USER",
+            payload: { user, token },
+          });
+
+          // Validate token with backend in background
           try {
+            console.log("Background validation of token...");
             const currentUser = await authApi.getProfile();
+            console.log(
+              "Token validation successful, updating user data:",
+              currentUser
+            );
+
+            // Update with fresh user data if different
             dispatch({
               type: "LOAD_USER",
               payload: { user: currentUser, token },
             });
+
+            // Update localStorage with fresh user data
+            localStorage.setItem("user", JSON.stringify(currentUser));
           } catch (error) {
-            // Token is invalid, clear storage
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            dispatch({ type: "INITIAL_LOAD_COMPLETE" });
+            console.log("Token validation failed in background:", error);
+            // Don't immediately log out, let the user continue until they make a request
+            // The API layer will handle invalid tokens on actual requests
           }
         } catch (error) {
+          console.log("Error parsing user data:", error);
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           dispatch({ type: "INITIAL_LOAD_COMPLETE" });
         }
       } else {
+        console.log("No token found in localStorage");
         // No token found, complete initial loading
         dispatch({ type: "INITIAL_LOAD_COMPLETE" });
       }

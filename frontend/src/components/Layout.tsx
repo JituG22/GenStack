@@ -30,7 +30,7 @@ const navigation = [
 
 export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -159,9 +159,17 @@ export function Layout({ children }: LayoutProps) {
                   {/* User Name - Hidden on small screens */}
                   <div className="hidden md:flex flex-col">
                     <span className="text-sm font-medium text-gray-900">
-                      {user?.firstName && user?.lastName
-                        ? `${user.firstName} ${user.lastName}`
-                        : "Loading..."}
+                      {(() => {
+                        console.log("User data in Layout:", user);
+                        if (user?.firstName && user?.lastName) {
+                          return `${user.firstName} ${user.lastName}`;
+                        } else if (user?.email) {
+                          // Fallback to email if firstName/lastName not available
+                          return user.email.split("@")[0];
+                        } else {
+                          return isLoading ? "Loading..." : "User";
+                        }
+                      })()}
                     </span>
                     <span className="text-xs text-gray-500">
                       {user?.email || ""}

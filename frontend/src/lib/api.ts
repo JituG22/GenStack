@@ -89,6 +89,16 @@ async function fetchApi<T>(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+
+    // Handle 401 Unauthorized - token expired or invalid
+    if (response.status === 401) {
+      console.log("API returned 401, clearing auth data");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      // Reload the page to trigger auth flow
+      window.location.href = "/login";
+    }
+
     throw new ApiError(
       errorData.message || "An error occurred",
       response.status,
@@ -128,7 +138,17 @@ export const authApi = {
   },
 
   async getProfile(): Promise<User> {
-    return fetchApi<User>("/auth/profile");
+    const response = await fetchApi<ApiResponse<any>>("/auth/me");
+    // Transform MongoDB _id to id for frontend consistency
+    const user = response.data;
+    return {
+      id: user._id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      organization: user.organization,
+    };
   },
 
   async refreshToken(): Promise<{ token: string }> {
