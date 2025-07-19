@@ -9,6 +9,8 @@ import {
   DocumentIcon,
   CubeIcon,
   UserGroupIcon,
+  ExclamationTriangleIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Dashboard() {
@@ -17,6 +19,15 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<
     "projects" | "nodes" | "templates"
   >("projects");
+
+  // Modal state for delete confirmation
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Error modal state
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Projects data
   const projectsData = usePaginatedData(projectsApi.getProjects, {
@@ -66,33 +77,46 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (item: any) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete this ${activeTab.slice(0, -1)}?`
-      )
-    ) {
-      return;
-    }
+    setItemToDelete(item);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
 
     try {
+      setIsDeleting(true);
       switch (activeTab) {
         case "projects":
-          await projectsApi.deleteProject(item.id);
+          await projectsApi.deleteProject(itemToDelete.id);
           projectsData.refetch();
           break;
         case "nodes":
-          await nodesApi.deleteNode(item.id);
+          await nodesApi.deleteNode(itemToDelete.id);
           nodesData.refetch();
           break;
         case "templates":
-          await templatesApi.deleteTemplate(item.id);
+          await templatesApi.deleteTemplate(itemToDelete.id);
           templatesData.refetch();
           break;
       }
+      setShowDeleteModal(false);
+      setItemToDelete(null);
     } catch (error) {
       console.error(`Error deleting ${activeTab.slice(0, -1)}:`, error);
-      alert(`Failed to delete ${activeTab.slice(0, -1)}. Please try again.`);
+      setErrorMessage(
+        `Failed to delete ${activeTab.slice(0, -1)}. Please try again.`
+      );
+      setShowErrorModal(true);
+      setShowDeleteModal(false);
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setItemToDelete(null);
   };
 
   const getCurrentData = () => {
@@ -464,6 +488,113 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Delete {activeTab.slice(0, -1)}
+                    </h3>
+                  </div>
+                </div>
+                <button
+                  onClick={cancelDelete}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="mb-6">
+                <p className="text-sm text-gray-500">
+                  Are you sure you want to delete{" "}
+                  <span className="font-medium text-gray-900">
+                    "{itemToDelete?.name}"
+                  </span>
+                  ? This action cannot be undone.
+                </p>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end space-x-3">
+                <button
+                  onClick={cancelDelete}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Deleting...
+                    </div>
+                  ) : (
+                    "Delete"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">Error</h3>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowErrorModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="mb-6">
+                <p className="text-sm text-gray-500">{errorMessage}</p>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end">
+                <button
+                  onClick={() => setShowErrorModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

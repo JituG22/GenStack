@@ -60,8 +60,9 @@ export const ProjectsPage: React.FC = () => {
     if (!newProject.name.trim()) return;
 
     try {
-      const response = await projectsApi.createProject(newProject);
-      setProjects((prev) => [response.data, ...prev]);
+      await projectsApi.createProject(newProject);
+
+      // Clear form and close modal first
       setNewProject({ name: "", description: "" });
       setShowForm(false);
 
@@ -69,6 +70,9 @@ export const ProjectsPage: React.FC = () => {
       if (location.pathname === "/projects/new") {
         navigate("/projects");
       }
+
+      // Re-fetch the entire projects list to ensure consistency
+      await fetchProjects();
     } catch (error) {
       console.error("Error creating project:", error);
     }
@@ -79,7 +83,8 @@ export const ProjectsPage: React.FC = () => {
 
     try {
       await projectsApi.deleteProject(id);
-      setProjects((prev) => prev.filter((project) => project.id !== id));
+      // Re-fetch the entire projects list to ensure consistency
+      await fetchProjects();
     } catch (error) {
       console.error("Error deleting project:", error);
     }

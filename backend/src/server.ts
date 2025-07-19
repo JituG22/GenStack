@@ -52,7 +52,11 @@ app.use(helmet()); // Set security headers
 app.use(compression()); // Compress responses
 app.use(
   cors({
-    origin: config.corsOrigin,
+    origin: [
+      config.corsOrigin,
+      "http://localhost:3001",
+      "http://localhost:5173",
+    ],
     credentials: true,
   })
 );

@@ -54,6 +54,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
           token: token,
         },
         autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        timeout: 20000,
       });
 
       newSocket.on("connect", () => {
@@ -61,13 +65,18 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         setIsConnected(true);
       });
 
-      newSocket.on("disconnect", () => {
-        console.log("❌ Disconnected from WebSocket server");
+      newSocket.on("disconnect", (reason) => {
+        console.log("❌ Disconnected from WebSocket server:", reason);
         setIsConnected(false);
       });
 
       newSocket.on("connect_error", (error) => {
         console.error("❌ WebSocket connection error:", error);
+        setIsConnected(false);
+      });
+
+      newSocket.on("reconnect_failed", () => {
+        console.log("❌ WebSocket reconnection failed");
         setIsConnected(false);
       });
 

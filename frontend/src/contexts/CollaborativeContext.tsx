@@ -96,12 +96,21 @@ export const CollaborativeProvider: React.FC<CollaborativeProviderProps> = ({
     ConnectionUpdate[]
   >([]);
 
-  // Initialize WebSocket connection
+  // Initialize WebSocket connection - DISABLED for now to prevent CORS errors
   useEffect(() => {
+    // Temporarily disabled to fix CORS infinite loop issues
+    console.log("CollaborativeContext: WebSocket connection disabled");
+    return;
+
     if (!user) return;
 
     const newSocket = io("http://localhost:5000/collaboration", {
       withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 20000,
+      autoConnect: false, // Don't auto-connect
     });
 
     newSocket.on("connect", () => {
@@ -116,8 +125,18 @@ export const CollaborativeProvider: React.FC<CollaborativeProviderProps> = ({
       });
     });
 
-    newSocket.on("disconnect", () => {
-      console.log("Collaborative WebSocket disconnected");
+    newSocket.on("disconnect", (reason) => {
+      console.log("Collaborative WebSocket disconnected:", reason);
+      setIsConnected(false);
+    });
+
+    newSocket.on("connect_error", (error) => {
+      console.log("❌ WebSocket connection error:", error);
+      setIsConnected(false);
+    });
+
+    newSocket.on("reconnect_failed", () => {
+      console.log("❌ WebSocket reconnection failed");
       setIsConnected(false);
     });
 
