@@ -3,24 +3,27 @@
 ## Quick Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/JituG22/GenStack.git
    cd GenStack
    ```
 
 2. **Setup Backend Environment**
+
    ```bash
    cd backend
    cp .env.example .env.development
    ```
 
 3. **Configure your environment variables in `.env.development`:**
+
    ```bash
    # MongoDB Configuration
    MONGODB_URI=mongodb://localhost:27017/genstack-dev
    MONGODB_TEST_URI=mongodb://localhost:27017/genstack-test
 
-   # JWT Configuration  
+   # JWT Configuration
    JWT_SECRET=your-super-secret-jwt-key-here-change-in-production
    JWT_EXPIRES_IN=7d
 
@@ -40,6 +43,7 @@
    ```
 
 4. **Install dependencies and start servers**
+
    ```bash
    # Backend
    cd backend
@@ -57,11 +61,13 @@
 To enable GitHub integration for automatic repository creation:
 
 1. **Create a GitHub Personal Access Token:**
+
    - Go to GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)
    - Generate a new token with full repo permissions
    - Copy the token
 
 2. **Configure environment variables:**
+
    ```bash
    GITHUB_TOKEN=ghp_your_token_here
    GITHUB_USERNAME=your-github-username
@@ -83,7 +89,7 @@ To enable GitHub integration for automatic repository creation:
 ## Available Servers
 
 - **Backend API**: http://localhost:5000
-- **Frontend**: http://localhost:3000  
+- **Frontend**: http://localhost:3000
 - **API Documentation**: http://localhost:5000/api-docs
 - **Health Check**: http://localhost:5000/health
 
@@ -91,5 +97,5 @@ To enable GitHub integration for automatic repository creation:
 
 - ✅ `.env.example` - Template file (safe to commit)
 - ❌ `.env.development` - Your local config (never commit)
-- ❌ `.env.production` - Production config (never commit) 
+- ❌ `.env.production` - Production config (never commit)
 - ❌ `.env.local` - Local overrides (never commit)
