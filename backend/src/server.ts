@@ -20,6 +20,7 @@ import VersionHistoryService from "./services/versionHistoryService";
 import PermissionService from "./services/permissionService";
 import AnnotationService from "./services/annotationService";
 import ErrorBoundaryService from "./services/errorBoundaryService";
+import RealtimeCollaborationService from "./services/realtimeCollaborationService";
 
 // Route imports
 import authRoutes from "./routes/auth";
@@ -40,6 +41,7 @@ import repositoryRoutes from "./routes/repository";
 import githubActionsRoutes from "./routes/github-actions";
 import advancedGitRoutes from "./routes/advanced-git";
 import repositoryAnalyticsRoutes from "./routes/repository-analytics";
+import collaborationRoutes from "./routes/collaboration";
 
 const app = express();
 const httpServer = createServer(app);
@@ -141,6 +143,7 @@ app.use("/api/repository", repositoryRoutes);
 app.use("/api/github-actions", githubActionsRoutes);
 app.use("/api/advanced-git", advancedGitRoutes);
 app.use("/api/repository-analytics", repositoryAnalyticsRoutes);
+app.use("/api/collaboration", collaborationRoutes);
 
 // 404 handler
 app.use(notFound);
@@ -158,6 +161,11 @@ const startServer = async () => {
     const wsService = initializeSimpleWebSocket(httpServer);
     // Make it globally available for API routes
     (global as any).simpleWebSocketService = wsService;
+
+    // Initialize Real-time Collaboration Service
+    const realtimeService = new RealtimeCollaborationService(httpServer);
+    // Make it available for API routes
+    app.locals.realtimeService = realtimeService;
 
     // Initialize Collaboration Service (reuse the same Socket.IO server)
     const collaborationService = new CollaborationService(
@@ -188,8 +196,9 @@ const startServer = async () => {
       console.log(
         `� API Documentation: http://localhost:${config.port}/api-docs`
       );
-      console.log(`�🔄 WebSocket enabled for real-time features`);
+      console.log(`🔄 WebSocket enabled for real-time features`);
       console.log(`🤝 Collaboration service initialized`);
+      console.log(`⚡ Real-time collaboration service initialized`);
       console.log(`🔧 Advanced services initialized:`);
       console.log(`   - Operational Transform`);
       console.log(`   - Version History`);
