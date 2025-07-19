@@ -44,6 +44,30 @@ const projectSchema = new Schema(
       default: false,
     },
     tags: [String],
+    github: {
+      enabled: {
+        type: Boolean,
+        default: false,
+      },
+      repoId: {
+        type: Number,
+      },
+      repoName: {
+        type: String,
+      },
+      repoUrl: {
+        type: String,
+      },
+      lastSyncAt: {
+        type: Date,
+      },
+      syncStatus: {
+        type: String,
+        enum: ["pending", "synced", "error", "manual"],
+        default: "manual",
+      },
+      syncErrors: [String],
+    },
     metadata: {
       version: {
         type: String,

@@ -337,4 +337,44 @@ export const analyticsApi = {
   },
 };
 
+// GitHub-enabled Projects API
+export const githubProjectsApi = {
+  async getHealth(): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>("/projects-github/health");
+  },
+
+  async createProjectWithGitHub(projectData: any): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>("/projects-github", {
+      method: "POST",
+      body: JSON.stringify(projectData),
+    });
+  },
+
+  async updateProjectWithGitHub(
+    id: string,
+    projectData: any
+  ): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/projects-github/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(projectData),
+    });
+  },
+
+  async deleteProjectWithGitHub(id: string): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/projects-github/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  async syncProjectWithGitHub(id: string): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/projects-github/${id}/sync`, {
+      method: "POST",
+    });
+  },
+
+  async getProjectGitHubStatus(id: string): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(`/projects-github/${id}/github-status`);
+  },
+};
+
 export { ApiError };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import { projectsApi } from "../lib/api";
+import { projectsApi, githubProjectsApi } from "../lib/api";
 import {
   PlusIcon,
   TrashIcon,
@@ -21,14 +21,26 @@ export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newProject, setNewProject] = useState({ name: "", description: "" });
+  const [newProject, setNewProject] = useState({
+    name: "",
+    description: "",
+    enableGitHub: false,
+    isPublic: false,
+    githubConfig: {
+      repositoryName: "",
+      autoSync: true,
+      createReadme: true,
+    },
+  });
   const [showForm, setShowForm] = useState(false);
+  const [githubHealthy, setGithubHealthy] = useState(false);
   const { isConnected } = useWebSocket();
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchProjects();
+    checkGitHubHealth();
   }, []);
 
   useEffect(() => {
@@ -42,6 +54,29 @@ export const ProjectsPage: React.FC = () => {
       setShowForm(true);
     }
   }, [location.pathname]);
+
+  const checkGitHubHealth = async () => {
+    try {
+      const response = await githubProjectsApi.getHealth();
+      setGithubHealthy(response.success && response.data?.config?.ready);
+    } catch (error) {
+      setGithubHealthy(false);
+    }
+  };
+
+  const resetProjectForm = () => {
+    setNewProject({
+      name: "",
+      description: "",
+      enableGitHub: false,
+      isPublic: false,
+      githubConfig: {
+        repositoryName: "",
+        autoSync: true,
+        createReadme: true,
+      },
+    });
+  };
 
   const handleFilterChange = (filteredData: Project[]) => {
     setFilteredProjects(filteredData);
@@ -64,10 +99,15 @@ export const ProjectsPage: React.FC = () => {
     if (!newProject.name.trim()) return;
 
     try {
-      await projectsApi.createProject(newProject);
+      // Use GitHub-enabled API if GitHub is enabled, otherwise use regular API
+      if (newProject.enableGitHub) {
+        await githubProjectsApi.createProjectWithGitHub(newProject);
+      } else {
+        await projectsApi.createProject(newProject);
+      }
 
       // Clear form and close modal first
-      setNewProject({ name: "", description: "" });
+      resetProjectForm();
       setShowForm(false);
 
       // If we came from /projects/new, navigate back to /projects
@@ -149,7 +189,7 @@ export const ProjectsPage: React.FC = () => {
       {/* Create Project Form */}
       {showForm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-[500px] shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Create New Project
@@ -173,7 +213,7 @@ export const ProjectsPage: React.FC = () => {
                     required
                   />
                 </div>
-                <div className="mb-6">
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Description
                   </label>
@@ -190,12 +230,153 @@ export const ProjectsPage: React.FC = () => {
                     placeholder="Enter project description"
                   />
                 </div>
+
+                {/* GitHub Integration Options */}
+                <div className="mb-4 p-4 bg-gray-50 rounded-md">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-medium text-gray-900">
+                      GitHub Integration
+                    </h4>
+                    <div
+                      className={`text-xs px-2 py-1 rounded ${
+                        githubHealthy
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {githubHealthy ? "✓ Available" : "✗ Unavailable"}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center mb-3">
+                    <input
+                      type="checkbox"
+                      id="enableGitHub"
+                      checked={newProject.enableGitHub}
+                      disabled={!githubHealthy}
+                      onChange={(e) =>
+                        setNewProject((prev) => ({
+                          ...prev,
+                          enableGitHub: e.target.checked,
+                          githubConfig: {
+                            ...prev.githubConfig,
+                            repositoryName: e.target.checked
+                              ? prev.name.toLowerCase().replace(/\s+/g, "-")
+                              : "",
+                          },
+                        }))
+                      }
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor="enableGitHub"
+                      className="ml-2 block text-sm text-gray-900"
+                    >
+                      Create GitHub repository
+                    </label>
+                  </div>
+
+                  {newProject.enableGitHub && (
+                    <div className="space-y-3 pl-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Repository Name
+                        </label>
+                        <input
+                          type="text"
+                          value={newProject.githubConfig.repositoryName}
+                          onChange={(e) =>
+                            setNewProject((prev) => ({
+                              ...prev,
+                              githubConfig: {
+                                ...prev.githubConfig,
+                                repositoryName: e.target.value,
+                              },
+                            }))
+                          }
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="repository-name"
+                        />
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="isPublic"
+                          checked={newProject.isPublic}
+                          onChange={(e) =>
+                            setNewProject((prev) => ({
+                              ...prev,
+                              isPublic: e.target.checked,
+                            }))
+                          }
+                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        />
+                        <label
+                          htmlFor="isPublic"
+                          className="ml-2 block text-sm text-gray-700"
+                        >
+                          Public repository
+                        </label>
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="createReadme"
+                          checked={newProject.githubConfig.createReadme}
+                          onChange={(e) =>
+                            setNewProject((prev) => ({
+                              ...prev,
+                              githubConfig: {
+                                ...prev.githubConfig,
+                                createReadme: e.target.checked,
+                              },
+                            }))
+                          }
+                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        />
+                        <label
+                          htmlFor="createReadme"
+                          className="ml-2 block text-sm text-gray-700"
+                        >
+                          Initialize with README
+                        </label>
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="autoSync"
+                          checked={newProject.githubConfig.autoSync}
+                          onChange={(e) =>
+                            setNewProject((prev) => ({
+                              ...prev,
+                              githubConfig: {
+                                ...prev.githubConfig,
+                                autoSync: e.target.checked,
+                              },
+                            }))
+                          }
+                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        />
+                        <label
+                          htmlFor="autoSync"
+                          className="ml-2 block text-sm text-gray-700"
+                        >
+                          Auto-sync changes
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
                     onClick={() => {
                       setShowForm(false);
-                      setNewProject({ name: "", description: "" });
+                      resetProjectForm();
                       // If we came from /projects/new, navigate back to /projects
                       if (location.pathname === "/projects/new") {
                         navigate("/projects");
@@ -209,7 +390,9 @@ export const ProjectsPage: React.FC = () => {
                     type="submit"
                     className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
-                    Create Project
+                    {newProject.enableGitHub
+                      ? "Create Project & Repository"
+                      : "Create Project"}
                   </button>
                 </div>
               </form>

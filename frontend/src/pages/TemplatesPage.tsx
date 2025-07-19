@@ -25,7 +25,7 @@ export const TemplatesPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  
+
   // Create template modal state
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
@@ -142,7 +142,7 @@ export const TemplatesPage: React.FC = () => {
       };
 
       const response = await templatesService.createTemplate(templateData);
-      
+
       if (response.success) {
         // Refresh templates list
         await fetchTemplates();
@@ -329,7 +329,7 @@ export const TemplatesPage: React.FC = () => {
                   Discover and use pre-built templates for your projects
                 </p>
               </div>
-              <button 
+              <button
                 onClick={handleCreateTemplate}
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
@@ -505,7 +505,9 @@ export const TemplatesPage: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Create New Template</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                Create New Template
+              </h2>
               <button
                 onClick={handleCloseCreateModal}
                 className="text-gray-400 hover:text-gray-600"

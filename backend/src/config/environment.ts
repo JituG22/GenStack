@@ -1,5 +1,5 @@
-import dotenv from "dotenv";
-import path from "path";
+import * as dotenv from "dotenv";
+import * as path from "path";
 
 // Load environment-specific config file
 const environment = process.env.NODE_ENV || "development";
@@ -59,6 +59,14 @@ export const config = {
   clusterMode: process.env.CLUSTER_MODE === "true",
   enableCompression: process.env.ENABLE_COMPRESSION === "true",
   enableHelmet: process.env.ENABLE_HELMET === "true",
+
+  // GitHub Integration
+  github: {
+    token: process.env.GITHUB_TOKEN || "",
+    username: process.env.GITHUB_USERNAME || "",
+    organization: process.env.GITHUB_ORG || "",
+    enabled: process.env.GITHUB_ENABLED === "true",
+  },
 
   // Utility functions
   isDevelopment: () => environment === "development",
