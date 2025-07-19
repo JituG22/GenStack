@@ -68,6 +68,26 @@ function App() {
                     }
                   />
                   <Route
+                    path="/projects/new"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <ProjectsPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/nodes/new"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <EnhancedTemplatesPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
                     path="/analytics"
                     element={
                       <ProtectedRoute>

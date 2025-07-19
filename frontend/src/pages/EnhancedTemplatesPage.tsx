@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { NodeTemplateManager } from "../components/NodeTemplateManager";
 import { NodePropertyEditor } from "../components/NodePropertyEditor";
 import { ProjectVersionControl } from "../components/ProjectVersionControl";
@@ -46,6 +47,14 @@ export const EnhancedTemplatesPage: React.FC = () => {
     null
   );
   const [selectedNodeId] = useState("demo-node-123");
+  const location = useLocation();
+
+  // Auto-switch to templates tab if URL is /nodes/new (for creating nodes)
+  useEffect(() => {
+    if (location.pathname === "/nodes/new") {
+      setActiveTab("templates");
+    }
+  }, [location.pathname]);
 
   // Sample property schema for demonstration
   const sampleProperties: Record<string, PropertyValue> = {

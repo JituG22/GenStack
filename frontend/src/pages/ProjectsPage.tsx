@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
+import { useLocation, useNavigate } from "react-router-dom";
 import { projectsApi } from "../lib/api";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { AdvancedFilter } from "../components/AdvancedFilter";
@@ -19,6 +20,8 @@ export const ProjectsPage: React.FC = () => {
   const [newProject, setNewProject] = useState({ name: "", description: "" });
   const [showForm, setShowForm] = useState(false);
   const { isConnected } = useWebSocket();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProjects();
@@ -28,6 +31,13 @@ export const ProjectsPage: React.FC = () => {
     // Initialize filtered projects with all projects
     setFilteredProjects(projects);
   }, [projects]);
+
+  // Auto-open create modal if URL is /projects/new
+  useEffect(() => {
+    if (location.pathname === "/projects/new") {
+      setShowForm(true);
+    }
+  }, [location.pathname]);
 
   const handleFilterChange = (filteredData: Project[]) => {
     setFilteredProjects(filteredData);
@@ -54,6 +64,11 @@ export const ProjectsPage: React.FC = () => {
       setProjects((prev) => [response.data, ...prev]);
       setNewProject({ name: "", description: "" });
       setShowForm(false);
+
+      // If we came from /projects/new, navigate back to /projects
+      if (location.pathname === "/projects/new") {
+        navigate("/projects");
+      }
     } catch (error) {
       console.error("Error creating project:", error);
     }
@@ -168,6 +183,10 @@ export const ProjectsPage: React.FC = () => {
                     onClick={() => {
                       setShowForm(false);
                       setNewProject({ name: "", description: "" });
+                      // If we came from /projects/new, navigate back to /projects
+                      if (location.pathname === "/projects/new") {
+                        navigate("/projects");
+                      }
                     }}
                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
