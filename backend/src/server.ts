@@ -21,6 +21,8 @@ import PermissionService from "./services/permissionService";
 import AnnotationService from "./services/annotationService";
 import ErrorBoundaryService from "./services/errorBoundaryService";
 import RealtimeCollaborationService from "./services/realtimeCollaborationService";
+import RealtimeChatService from "./services/realtimeChatService";
+import WebRTCService from "./services/webrtcService";
 
 // Route imports
 import authRoutes from "./routes/auth";
@@ -42,6 +44,7 @@ import githubActionsRoutes from "./routes/github-actions";
 import advancedGitRoutes from "./routes/advanced-git";
 import repositoryAnalyticsRoutes from "./routes/repository-analytics";
 import collaborationRoutes from "./routes/collaboration";
+import communicationRoutes from "./routes/communication";
 
 const app = express();
 const httpServer = createServer(app);
@@ -144,6 +147,7 @@ app.use("/api/github-actions", githubActionsRoutes);
 app.use("/api/advanced-git", advancedGitRoutes);
 app.use("/api/repository-analytics", repositoryAnalyticsRoutes);
 app.use("/api/collaboration", collaborationRoutes);
+app.use("/api/communication", communicationRoutes);
 
 // 404 handler
 app.use(notFound);
@@ -182,12 +186,18 @@ const startServer = async () => {
     const annotationService = new AnnotationService();
     const errorBoundaryService = new ErrorBoundaryService();
 
+    // Initialize Communication Services
+    const realtimeChatService = new RealtimeChatService(httpServer);
+    const webrtcService = new WebRTCService(httpServer);
+
     // Make services globally available for API routes
     (global as any).operationalTransform = operationalTransform;
     (global as any).versionHistoryService = versionHistoryService;
     (global as any).permissionService = permissionService;
     (global as any).annotationService = annotationService;
     (global as any).errorBoundaryService = errorBoundaryService;
+    (global as any).realtimeChatService = realtimeChatService;
+    (global as any).webrtcService = webrtcService;
 
     httpServer.listen(config.port, () => {
       console.log(`🚀 Server running on port ${config.port}`);
