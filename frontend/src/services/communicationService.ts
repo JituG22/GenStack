@@ -271,32 +271,115 @@ class CommunicationService {
 
   async startTyping(sessionId: string): Promise<void> {
     if (!this.chatSocket) throw new Error("Chat socket not connected");
-    this.chatSocket.emit("start_typing", { sessionId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) return; // Fail silently for typing indicators
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+    const username =
+      `${user.firstName} ${user.lastName}`.trim() ||
+      user.email ||
+      "Unknown User";
+
+    this.chatSocket.emit("start_typing", {
+      sessionId,
+      userId,
+      username,
+    });
   }
 
   async stopTyping(sessionId: string): Promise<void> {
     if (!this.chatSocket) throw new Error("Chat socket not connected");
-    this.chatSocket.emit("stop_typing", { sessionId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) return; // Fail silently for typing indicators
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.chatSocket.emit("stop_typing", {
+      sessionId,
+      userId,
+    });
   }
 
   async joinChatSession(sessionId: string): Promise<void> {
     if (!this.chatSocket) throw new Error("Chat socket not connected");
-    this.chatSocket.emit("join_session", { sessionId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+    const username =
+      `${user.firstName} ${user.lastName}`.trim() ||
+      user.email ||
+      "Unknown User";
+
+    this.chatSocket.emit("join_session", {
+      sessionId,
+      userId,
+      username,
+    });
   }
 
   async leaveChatSession(sessionId: string): Promise<void> {
     if (!this.chatSocket) throw new Error("Chat socket not connected");
-    this.chatSocket.emit("leave_session", { sessionId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.chatSocket.emit("leave_session", {
+      sessionId,
+      userId,
+    });
   }
 
   async addReaction(messageId: string, emoji: string): Promise<void> {
     if (!this.chatSocket) throw new Error("Chat socket not connected");
-    this.chatSocket.emit("add_reaction", { messageId, emoji });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+    const username =
+      `${user.firstName} ${user.lastName}`.trim() ||
+      user.email ||
+      "Unknown User";
+
+    this.chatSocket.emit("add_reaction", {
+      messageId,
+      emoji,
+      userId,
+      username,
+    });
   }
 
   async removeReaction(messageId: string, emoji: string): Promise<void> {
     if (!this.chatSocket) throw new Error("Chat socket not connected");
-    this.chatSocket.emit("remove_reaction", { messageId, emoji });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.chatSocket.emit("remove_reaction", {
+      messageId,
+      emoji,
+      userId,
+    });
   }
 
   async createThread(
@@ -305,7 +388,25 @@ class CommunicationService {
     messageId?: string
   ): Promise<void> {
     if (!this.chatSocket) throw new Error("Chat socket not connected");
-    this.chatSocket.emit("create_thread", { sessionId, title, messageId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+    const username =
+      `${user.firstName} ${user.lastName}`.trim() ||
+      user.email ||
+      "Unknown User";
+
+    this.chatSocket.emit("create_thread", {
+      sessionId,
+      title,
+      messageId,
+      userId,
+      username,
+    });
   }
 
   // WebRTC API Methods

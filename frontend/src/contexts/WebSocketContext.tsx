@@ -226,10 +226,23 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       setSocket(newSocket);
 
       return () => {
+        console.log("🧹 Cleaning up WebSocket connection");
         newSocket.disconnect();
         setSocket(null);
         setIsConnected(false);
+        setConnectedUsers([]);
+        setNotifications([]);
       };
+    } else {
+      // User logged out or no token - cleanup any existing connections
+      if (socket) {
+        console.log("🚪 User logged out, disconnecting WebSocket");
+        socket.disconnect();
+        setSocket(null);
+        setIsConnected(false);
+        setConnectedUsers([]);
+        setNotifications([]);
+      }
     }
   }, [user, token]);
 

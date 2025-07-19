@@ -313,6 +313,34 @@ export class WebSocketService {
   public getConnectedUsers(): string[] {
     return Array.from(this.connectedUsers.keys());
   }
+
+  // Cleanup methods for logout
+  public disconnectUser(userId: string): void {
+    console.log(`🔌 Disconnecting user ${userId} from WebSocket`);
+
+    const socketId = this.connectedUsers.get(userId);
+    if (socketId) {
+      const socket = this.io.sockets.sockets.get(socketId);
+      if (socket) {
+        // Notify others that user is logging out
+        socket.broadcast
+          .to(`org_${(socket as any).user?.organization}`)
+          .emit("user_disconnected", {
+            userId: userId,
+            user: `${(socket as any).user?.firstName} ${
+              (socket as any).user?.lastName
+            }`,
+            reason: "logout",
+            timestamp: new Date(),
+          });
+
+        socket.disconnect(true);
+      }
+      this.connectedUsers.delete(userId);
+    }
+
+    console.log(`✅ Disconnected user ${userId} from WebSocket`);
+  }
 }
 
 export let webSocketService: WebSocketService;

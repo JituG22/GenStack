@@ -7,6 +7,7 @@ import {
 } from "react";
 import { User, LoginRequest, RegisterRequest } from "../types";
 import { authApi } from "../lib/api";
+import { logoutService } from "../services/logoutService";
 
 interface AuthState {
   user: User | null;
@@ -202,10 +203,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    dispatch({ type: "LOGOUT" });
+  const logout = async () => {
+    try {
+      // Perform comprehensive cleanup
+      await logoutService.performLogout();
+    } catch (error) {
+      console.error("Error during logout cleanup:", error);
+      // Continue with logout even if cleanup fails
+    } finally {
+      // Always dispatch logout action to update auth state
+      dispatch({ type: "LOGOUT" });
+    }
   };
 
   const clearError = () => {

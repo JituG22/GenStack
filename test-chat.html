@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .messages {
+        height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin: 10px 0;
+      }
+      .message {
+        margin: 5px 0;
+        padding: 5px;
+        background: #f5f5f5;
+        border-radius: 3px;
+      }
+      input,
+      button {
+        padding: 8px;
+        margin: 5px;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 3px;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chat System Test</h1>
+
+    <div class="test-section">
+      <h3>Authentication</h3>
+      <button onclick="login()">Login</button>
+      <button onclick="logout()">Logout</button>
+      <div id="auth-status" class="status info">Not authenticated</div>
+    </div>
+
+    <div class="test-section">
+      <h3>Chat Connection</h3>
+      <button onclick="connectToChat()">Connect to Chat</button>
+      <button onclick="disconnectFromChat()">Disconnect</button>
+      <div id="chat-status" class="status info">Not connected</div>
+    </div>
+
+    <div class="test-section">
+      <h3>Chat Session</h3>
+      <input
+        type="text"
+        id="session-id"
+        placeholder="Session ID"
+        value="test-session-123"
+      />
+      <button onclick="joinSession()">Join Session</button>
+      <button onclick="leaveSession()">Leave Session</button>
+      <div id="session-status" class="status info">Not in session</div>
+    </div>
+
+    <div class="test-section">
+      <h3>Messages</h3>
+      <div id="messages" class="messages"></div>
+      <div>
+        <input
+          type="text"
+          id="message-input"
+          placeholder="Type a message..."
+          style="width: 70%"
+        />
+        <button onclick="sendMessage()">Send Message</button>
+      </div>
+      <div>
+        <button onclick="sendMultipleMessages()">Send 5 Messages</button>
+        <button onclick="clearMessages()">Clear Messages</button>
+      </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script>
+      let authToken = null;
+      let chatSocket = null;
+      let currentSessionId = null;
+      let messageCount = 0;
+
+      // Authentication functions
+      async function login() {
+        try {
+          const response = await fetch("http://localhost:5000/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: "test@example.com",
+              password: "password123",
+            }),
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            authToken = data.token;
+            localStorage.setItem("token", authToken);
+            localStorage.setItem("user", JSON.stringify(data.user));
+            updateStatus("auth-status", "Logged in successfully", "success");
+          } else {
+            updateStatus(
+              "auth-status",
+              "Login failed: " + data.message,
+              "error"
+            );
+          }
+        } catch (error) {
+          updateStatus("auth-status", "Login error: " + error.message, "error");
+        }
+      }
+
+      function logout() {
+        authToken = null;
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        updateStatus("auth-status", "Logged out", "info");
+        if (chatSocket) {
+          disconnectFromChat();
+        }
+      }
+
+      // Chat connection functions
+      function connectToChat() {
+        if (!authToken) {
+          updateStatus("chat-status", "Please login first", "error");
+          return;
+        }
+
+        chatSocket = io("http://localhost:5000/chat", {
+          auth: { token: authToken },
+          transports: ["websocket"],
+        });
+
+        chatSocket.on("connect", () => {
+          updateStatus("chat-status", "Connected to chat", "success");
+          console.log("Chat socket connected:", chatSocket.id);
+        });
+
+        chatSocket.on("connect_error", (error) => {
+          updateStatus(
+            "chat-status",
+            "Connection error: " + error.message,
+            "error"
+          );
+          console.error("Chat connection error:", error);
+        });
+
+        chatSocket.on("disconnect", () => {
+          updateStatus("chat-status", "Disconnected from chat", "info");
+        });
+
+        // Chat event listeners
+        chatSocket.on("chat-joined", (data) => {
+          updateStatus(
+            "session-status",
+            `Joined session: ${data.sessionId}`,
+            "success"
+          );
+          console.log("Chat joined:", data);
+        });
+
+        chatSocket.on("message_received", (message) => {
+          displayMessage(message);
+          console.log("Message received:", message);
+        });
+
+        chatSocket.on("chat-error", (error) => {
+          updateStatus(
+            "session-status",
+            "Chat error: " + error.message,
+            "error"
+          );
+          console.error("Chat error:", error);
+        });
+
+        chatSocket.on("participant-joined", (data) => {
+          console.log("Participant joined:", data);
+        });
+
+        chatSocket.on("participant-left", (data) => {
+          console.log("Participant left:", data);
+        });
+      }
+
+      function disconnectFromChat() {
+        if (chatSocket) {
+          chatSocket.disconnect();
+          chatSocket = null;
+          updateStatus("chat-status", "Disconnected", "info");
+          updateStatus("session-status", "Not in session", "info");
+        }
+      }
+
+      // Session functions
+      function joinSession() {
+        if (!chatSocket) {
+          updateStatus(
+            "session-status",
+            "Please connect to chat first",
+            "error"
+          );
+          return;
+        }
+
+        const sessionId = document.getElementById("session-id").value;
+        if (!sessionId) {
+          updateStatus("session-status", "Please enter a session ID", "error");
+          return;
+        }
+
+        currentSessionId = sessionId;
+
+        // Get user info
+        const userStr = localStorage.getItem("user");
+        if (!userStr) {
+          updateStatus(
+            "session-status",
+            "User not found in localStorage",
+            "error"
+          );
+          return;
+        }
+
+        const user = JSON.parse(userStr);
+        const userId = user.id;
+        const username =
+          `${user.firstName} ${user.lastName}`.trim() ||
+          user.email ||
+          "Unknown User";
+
+        chatSocket.emit("join_session", {
+          sessionId: sessionId,
+          userId: userId,
+          username: username,
+        });
+
+        updateStatus(
+          "session-status",
+          `Joining session: ${sessionId}...`,
+          "info"
+        );
+      }
+
+      function leaveSession() {
+        if (!chatSocket || !currentSessionId) {
+          updateStatus("session-status", "Not in a session", "error");
+          return;
+        }
+
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          chatSocket.emit("leave_session", {
+            sessionId: currentSessionId,
+            userId: user.id,
+          });
+        }
+
+        currentSessionId = null;
+        updateStatus("session-status", "Left session", "info");
+      }
+
+      // Message functions
+      function sendMessage() {
+        if (!chatSocket || !currentSessionId) {
+          updateStatus(
+            "session-status",
+            "Please join a session first",
+            "error"
+          );
+          return;
+        }
+
+        const messageInput = document.getElementById("message-input");
+        const content = messageInput.value.trim();
+
+        if (!content) {
+          alert("Please enter a message");
+          return;
+        }
+
+        messageCount++;
+        const messageWithCount = `[${messageCount}] ${content}`;
+
+        chatSocket.emit("send_message", {
+          sessionId: currentSessionId,
+          content: messageWithCount,
+          type: "text",
+        });
+
+        messageInput.value = "";
+        console.log(`Sent message ${messageCount}: ${messageWithCount}`);
+      }
+
+      function sendMultipleMessages() {
+        for (let i = 1; i <= 5; i++) {
+          setTimeout(() => {
+            if (chatSocket && currentSessionId) {
+              messageCount++;
+              const content = `Test message ${messageCount} - ${new Date().toLocaleTimeString()}`;
+
+              chatSocket.emit("send_message", {
+                sessionId: currentSessionId,
+                content: content,
+                type: "text",
+              });
+
+              console.log(`Sent message ${messageCount}: ${content}`);
+            }
+          }, i * 500); // 500ms delay between messages
+        }
+      }
+
+      function displayMessage(message) {
+        const messagesDiv = document.getElementById("messages");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message";
+        messageDiv.innerHTML = `
+                <strong>${message.username}:</strong> ${message.content}
+                <small style="color: #666; float: right;">${new Date(
+                  message.timestamp
+                ).toLocaleTimeString()}</small>
+            `;
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      function clearMessages() {
+        document.getElementById("messages").innerHTML = "";
+        messageCount = 0;
+      }
+
+      function updateStatus(elementId, message, type) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.className = `status ${type}`;
+      }
+
+      // Handle Enter key in message input
+      document
+        .getElementById("message-input")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            sendMessage();
+          }
+        });
+
+      // Auto-login on page load for testing
+      window.addEventListener("load", () => {
+        console.log("Page loaded - ready for testing");
+      });
+    </script>
+  </body>
+</html>

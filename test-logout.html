@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logout Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+      }
+      .error {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .log {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 3px;
+        font-family: monospace;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Comprehensive Logout Test</h1>
+
+    <div class="test-section">
+      <h3>1. Setup Test Data</h3>
+      <button onclick="setupTestData()">Setup Test Data</button>
+      <div id="setup-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>2. Login</h3>
+      <button onclick="testLogin()">Test Login</button>
+      <div id="login-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>3. Verify Data Before Logout</h3>
+      <button onclick="verifyDataBeforeLogout()">Check Data</button>
+      <div id="before-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>4. Test Comprehensive Logout</h3>
+      <button onclick="testLogout()">Test Logout</button>
+      <div id="logout-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>5. Verify Data After Logout</h3>
+      <button onclick="verifyDataAfterLogout()">Check Cleanup</button>
+      <div id="after-log" class="log"></div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:5000/api";
+      let authToken = null;
+
+      function log(elementId, message, isError = false) {
+        const element = document.getElementById(elementId);
+        const timestamp = new Date().toLocaleTimeString();
+        const style = isError ? "color: red;" : "color: green;";
+        element.innerHTML += `<div style="${style}">[${timestamp}] ${message}</div>`;
+      }
+
+      function setupTestData() {
+        const logEl = "setup-log";
+        document.getElementById(logEl).innerHTML = "";
+
+        // Setup localStorage test data
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ id: "test", email: "test@example.com" })
+        );
+        localStorage.setItem("authToken", "test-token");
+        localStorage.setItem(
+          "projects",
+          JSON.stringify([{ id: "proj1", name: "Test Project" }])
+        );
+        localStorage.setItem("preferences", JSON.stringify({ theme: "dark" }));
+        localStorage.setItem(
+          "recentFiles",
+          JSON.stringify(["file1.txt", "file2.js"])
+        );
+        localStorage.setItem(
+          "workspaceSettings",
+          JSON.stringify({ layout: "grid" })
+        );
+
+        // Setup sessionStorage test data
+        sessionStorage.setItem("tempData", "temporary-session-data");
+        sessionStorage.setItem("currentProject", "session-project-id");
+
+        log(
+          logEl,
+          "localStorage items set: user, authToken, projects, preferences, recentFiles, workspaceSettings"
+        );
+        log(logEl, "sessionStorage items set: tempData, currentProject");
+        log(logEl, "Test data setup complete!");
+      }
+
+      async function testLogin() {
+        const logEl = "login-log";
+        document.getElementById(logEl).innerHTML = "";
+
+        try {
+          const response = await fetch(`${API_BASE}/auth/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: "test@example.com",
+              password: "password123",
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            authToken = data.token;
+            log(logEl, "Login successful!");
+            log(logEl, `Token received: ${authToken.substring(0, 20)}...`);
+
+            // Update localStorage with real auth data
+            localStorage.setItem("authToken", authToken);
+            localStorage.setItem("user", JSON.stringify(data.user));
+          } else {
+            log(logEl, `Login failed: ${data.message}`, true);
+          }
+        } catch (error) {
+          log(logEl, `Login error: ${error.message}`, true);
+        }
+      }
+
+      function verifyDataBeforeLogout() {
+        const logEl = "before-log";
+        document.getElementById(logEl).innerHTML = "";
+
+        // Check localStorage
+        const localStorageKeys = Object.keys(localStorage);
+        log(logEl, `localStorage has ${localStorageKeys.length} items:`);
+        localStorageKeys.forEach((key) => {
+          log(
+            logEl,
+            `  - ${key}: ${localStorage.getItem(key)?.substring(0, 50)}...`
+          );
+        });
+
+        // Check sessionStorage
+        const sessionStorageKeys = Object.keys(sessionStorage);
+        log(logEl, `sessionStorage has ${sessionStorageKeys.length} items:`);
+        sessionStorageKeys.forEach((key) => {
+          log(
+            logEl,
+            `  - ${key}: ${sessionStorage.getItem(key)?.substring(0, 50)}...`
+          );
+        });
+
+        // Check auth token
+        log(logEl, `Auth token: ${authToken ? "Present" : "Not set"}`);
+      }
+
+      async function testLogout() {
+        const logEl = "logout-log";
+        document.getElementById(logEl).innerHTML = "";
+
+        if (!authToken) {
+          log(logEl, "No auth token available. Please login first.", true);
+          return;
+        }
+
+        try {
+          log(logEl, "Calling logout API...");
+
+          const response = await fetch(`${API_BASE}/auth/logout`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            log(logEl, "Server logout successful!");
+
+            // Simulate comprehensive frontend cleanup
+            log(logEl, "Starting frontend cleanup...");
+
+            // Clear localStorage
+            const beforeLocalCount = Object.keys(localStorage).length;
+            localStorage.clear();
+            log(
+              logEl,
+              `localStorage cleared (${beforeLocalCount} items removed)`
+            );
+
+            // Clear sessionStorage
+            const beforeSessionCount = Object.keys(sessionStorage).length;
+            sessionStorage.clear();
+            log(
+              logEl,
+              `sessionStorage cleared (${beforeSessionCount} items removed)`
+            );
+
+            // Clear auth token
+            authToken = null;
+            log(logEl, "Auth token cleared");
+
+            // Try to clear IndexedDB (simulate)
+            try {
+              const databases = await indexedDB.databases();
+              log(logEl, `Found ${databases.length} IndexedDB databases`);
+              for (const db of databases) {
+                if (db.name) {
+                  indexedDB.deleteDatabase(db.name);
+                  log(logEl, `Deleting IndexedDB: ${db.name}`);
+                }
+              }
+            } catch (idbError) {
+              log(logEl, `IndexedDB cleanup: ${idbError.message}`);
+            }
+
+            log(logEl, "✅ Comprehensive logout completed!");
+          } else {
+            log(logEl, `Logout failed: ${data.message}`, true);
+          }
+        } catch (error) {
+          log(logEl, `Logout error: ${error.message}`, true);
+        }
+      }
+
+      function verifyDataAfterLogout() {
+        const logEl = "after-log";
+        document.getElementById(logEl).innerHTML = "";
+
+        // Check localStorage
+        const localStorageKeys = Object.keys(localStorage);
+        if (localStorageKeys.length === 0) {
+          log(logEl, "✅ localStorage is empty");
+        } else {
+          log(
+            logEl,
+            `❌ localStorage still has ${localStorageKeys.length} items:`,
+            true
+          );
+          localStorageKeys.forEach((key) => {
+            log(logEl, `  - ${key}: ${localStorage.getItem(key)}`, true);
+          });
+        }
+
+        // Check sessionStorage
+        const sessionStorageKeys = Object.keys(sessionStorage);
+        if (sessionStorageKeys.length === 0) {
+          log(logEl, "✅ sessionStorage is empty");
+        } else {
+          log(
+            logEl,
+            `❌ sessionStorage still has ${sessionStorageKeys.length} items:`,
+            true
+          );
+          sessionStorageKeys.forEach((key) => {
+            log(logEl, `  - ${key}: ${sessionStorage.getItem(key)}`, true);
+          });
+        }
+
+        // Check auth token
+        if (!authToken) {
+          log(logEl, "✅ Auth token is cleared");
+        } else {
+          log(logEl, "❌ Auth token still present", true);
+        }
+
+        log(logEl, "Cleanup verification complete!");
+      }
+
+      // Test if we can still make authenticated requests
+      async function testTokenAfterLogout() {
+        if (!authToken) {
+          log("after-log", "✅ Cannot test with token - token is cleared");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          });
+
+          if (response.ok) {
+            log("after-log", "❌ Token still works after logout!", true);
+          } else {
+            log("after-log", "✅ Token rejected by server");
+          }
+        } catch (error) {
+          log("after-log", "✅ Token request failed as expected");
+        }
+      }
+    </script>
+  </body>
+</html>

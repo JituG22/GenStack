@@ -555,6 +555,78 @@ export class CollaborationService {
       0
     );
   }
+
+  // Cleanup methods for logout
+  public cleanupUserSessions(userId: string): void {
+    console.log(`🧹 Cleaning up collaboration sessions for user ${userId}`);
+
+    let cleanedSessions = 0;
+
+    // Find and remove user from all sessions
+    this.userSessions.forEach((session, socketId) => {
+      if (session.userId === userId) {
+        // Leave current project if any
+        if (session.currentProject) {
+          this.handleUserLeaveProject({ id: socketId } as any, {
+            projectId: session.currentProject,
+            userId,
+          });
+        }
+
+        this.userSessions.delete(socketId);
+        cleanedSessions++;
+      }
+    });
+
+    // Clean up user from all project rooms
+    this.rooms.forEach((room, projectId) => {
+      if (room.users.has(userId)) {
+        room.users.delete(userId);
+        room.lastActivity = new Date();
+
+        // Notify others in the room
+        this.io.to(`project_${projectId}`).emit("user_left_project", {
+          userId,
+          reason: "logout",
+          timestamp: new Date(),
+        });
+
+        // Clean up empty rooms
+        if (room.users.size === 0) {
+          this.rooms.delete(projectId);
+          console.log(`🗑️ Cleaned up empty collaboration room: ${projectId}`);
+        }
+      }
+    });
+
+    console.log(
+      `✅ Cleaned up ${cleanedSessions} collaboration sessions for user ${userId}`
+    );
+  }
+
+  public disconnectUser(userId: string): void {
+    console.log(`🔌 Disconnecting user ${userId} from collaboration service`);
+
+    // Find all sockets for this user
+    const userSocketIds: string[] = [];
+    this.userSessions.forEach((session, socketId) => {
+      if (session.userId === userId) {
+        userSocketIds.push(socketId);
+      }
+    });
+
+    // Disconnect each socket
+    userSocketIds.forEach((socketId) => {
+      const socket = (this.io as any).sockets.get(socketId);
+      if (socket) {
+        socket.disconnect(true);
+      }
+    });
+
+    console.log(
+      `✅ Disconnected ${userSocketIds.length} collaboration sockets for user ${userId}`
+    );
+  }
 }
 
 export default CollaborationService;

@@ -168,6 +168,20 @@ export const authApi = {
       method: "POST",
     });
   },
+
+  async logout(): Promise<void> {
+    try {
+      await fetchApi<{ success: boolean }>("/auth/logout", {
+        method: "POST",
+      });
+    } catch (error) {
+      // Continue with logout even if server call fails
+      console.warn(
+        "Server logout failed, continuing with client cleanup:",
+        error
+      );
+    }
+  },
 };
 
 // Enhanced Nodes API

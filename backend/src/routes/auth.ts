@@ -341,4 +341,98 @@ router.post(
   }
 );
 
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     description: Logout user and perform server-side cleanup of sessions and connections
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Success'
+ *             example:
+ *               success: true
+ *               message: "Logout successful"
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+// @route   POST /api/auth/logout
+// @desc    Logout user and cleanup server-side sessions
+// @access  Private
+router.post(
+  "/logout",
+  auth,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = (req as any).user?.id;
+
+      if (!userId) {
+        sendError(res, "User not found", 401);
+        return;
+      }
+
+      // Update user's last logout timestamp
+      await User.findByIdAndUpdate(userId, {
+        lastLogout: new Date(),
+        isOnline: false,
+      });
+
+      // Cleanup server-side sessions and connections
+      await cleanupUserSessions(userId);
+
+      console.log(`✅ User ${userId} logged out successfully`);
+      sendSuccess(res, null, "Logout successful");
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      sendError(res, "Logout failed", 500);
+    }
+  }
+);
+
+/**
+ * Cleanup user sessions and connections on logout
+ */
+async function cleanupUserSessions(userId: string): Promise<void> {
+  try {
+    // Get global services if available
+    const webSocketService = (global as any).webSocketService;
+    const collaborationService = (global as any).collaborationService;
+    const simpleWebSocketService = (global as any).simpleWebSocketService;
+
+    // Disconnect user from WebSocket services
+    if (webSocketService) {
+      webSocketService.disconnectUser(userId);
+    }
+
+    // Cleanup collaboration sessions
+    if (collaborationService) {
+      collaborationService.cleanupUserSessions(userId);
+    }
+
+    // Cleanup simple WebSocket sessions
+    if (simpleWebSocketService) {
+      simpleWebSocketService.cleanupUserSessions(userId);
+    }
+
+    // Cleanup communication services stored in app.locals
+    // Note: This will be handled by the communication service disconnect events
+
+    console.log(`🧹 Cleaned up sessions for user ${userId}`);
+  } catch (error) {
+    console.error("Error cleaning up user sessions:", error);
+  }
+}
+
 export default router;

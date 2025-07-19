@@ -305,6 +305,63 @@ export class SimpleWebSocketService {
   public getServer(): Server {
     return this.io;
   }
+
+  // Cleanup methods for logout
+  public disconnectUser(userId: string): void {
+    console.log(`🔌 Disconnecting user ${userId} from SimpleWebSocket`);
+
+    // Find all sessions for this user
+    const userSocketIds: string[] = [];
+    this.userSessions.forEach((session, socketId) => {
+      if (session.userId === userId) {
+        userSocketIds.push(socketId);
+      }
+    });
+
+    // Disconnect each socket
+    userSocketIds.forEach((socketId) => {
+      const socket = this.io.sockets.sockets.get(socketId);
+      if (socket) {
+        socket.disconnect(true);
+      }
+      this.userSessions.delete(socketId);
+    });
+
+    console.log(
+      `✅ Disconnected ${userSocketIds.length} sockets for user ${userId}`
+    );
+  }
+
+  public cleanupUserSessions(userId: string): void {
+    console.log(`🧹 Cleaning up sessions for user ${userId}`);
+
+    // Remove user from all sessions
+    const socketsToRemove: string[] = [];
+    this.userSessions.forEach((session, socketId) => {
+      if (session.userId === userId) {
+        socketsToRemove.push(socketId);
+
+        // Notify others that user left project
+        if (session.currentProject) {
+          this.io.to(`project_${session.currentProject}`).emit("user_left", {
+            userId: session.userId,
+            username: session.username,
+            socketId: socketId,
+            reason: "logout",
+          });
+        }
+      }
+    });
+
+    // Remove sessions
+    socketsToRemove.forEach((socketId) => {
+      this.userSessions.delete(socketId);
+    });
+
+    console.log(
+      `✅ Cleaned up ${socketsToRemove.length} sessions for user ${userId}`
+    );
+  }
 }
 
 export let simpleWebSocketService: SimpleWebSocketService;
