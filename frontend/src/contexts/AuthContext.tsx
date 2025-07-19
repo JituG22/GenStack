@@ -29,13 +29,14 @@ type AuthAction =
   | { type: "AUTH_FAILURE"; payload: string }
   | { type: "LOGOUT" }
   | { type: "CLEAR_ERROR" }
-  | { type: "LOAD_USER"; payload: { user: User; token: string } };
+  | { type: "LOAD_USER"; payload: { user: User; token: string } }
+  | { type: "INITIAL_LOAD_COMPLETE" };
 
 const initialState: AuthState = {
   user: null,
   token: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true, // Start with loading true to prevent immediate redirect
   error: null,
 };
 
@@ -82,6 +83,11 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isAuthenticated: true,
         isLoading: false,
       };
+    case "INITIAL_LOAD_COMPLETE":
+      return {
+        ...state,
+        isLoading: false,
+      };
     default:
       return state;
   }
@@ -94,21 +100,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Load user from localStorage on mount
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
+    const initializeAuth = async () => {
+      const token = localStorage.getItem("token");
+      const userData = localStorage.getItem("user");
 
-    if (token && userData) {
-      try {
-        const user = JSON.parse(userData);
-        dispatch({
-          type: "LOAD_USER",
-          payload: { user, token },
-        });
-      } catch (error) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+      if (token && userData) {
+        try {
+          // Validate token with backend
+          try {
+            const currentUser = await authApi.getProfile();
+            dispatch({
+              type: "LOAD_USER",
+              payload: { user: currentUser, token },
+            });
+          } catch (error) {
+            // Token is invalid, clear storage
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            dispatch({ type: "INITIAL_LOAD_COMPLETE" });
+          }
+        } catch (error) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          dispatch({ type: "INITIAL_LOAD_COMPLETE" });
+        }
+      } else {
+        // No token found, complete initial loading
+        dispatch({ type: "INITIAL_LOAD_COMPLETE" });
       }
-    }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (credentials: LoginRequest) => {

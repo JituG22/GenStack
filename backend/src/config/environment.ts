@@ -26,7 +26,9 @@ export const config = {
   jwtExpire: process.env.JWT_EXPIRE || "7d",
 
   // CORS
-  corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
+  corsOrigin: process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
+    : ["http://localhost:3000"],
 
   // Rate Limiting
   rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000", 10),
