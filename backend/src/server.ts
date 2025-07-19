@@ -38,6 +38,8 @@ import analyticsDashboardRoutes from "./routes/analytics-dashboard";
 import errorRoutes from "./routes/errors";
 import repositoryRoutes from "./routes/repository";
 import githubActionsRoutes from "./routes/github-actions";
+import advancedGitRoutes from "./routes/advanced-git";
+import repositoryAnalyticsRoutes from "./routes/repository-analytics";
 
 const app = express();
 const httpServer = createServer(app);
@@ -137,6 +139,8 @@ app.use("/api/analytics", analyticsDashboardRoutes);
 app.use("/api/errors", errorRoutes);
 app.use("/api/repository", repositoryRoutes);
 app.use("/api/github-actions", githubActionsRoutes);
+app.use("/api/advanced-git", advancedGitRoutes);
+app.use("/api/repository-analytics", repositoryAnalyticsRoutes);
 
 // 404 handler
 app.use(notFound);
