@@ -85,22 +85,21 @@ router.get(
         });
       }
 
-      const chatSession = chatService.getChatSession(sessionId);
-      if (!chatSession) {
-        return res.status(404).json({
-          success: false,
-          message: "Chat session not found",
-        });
-      }
+      const chatSession = chatService.getOrCreateChatSession(sessionId);
 
-      // Check access
-      const userParticipant = chatSession.participants.get(
-        (req as any).user?.id
-      );
-      if (!userParticipant) {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied to this chat session",
+      // For new sessions, create a default participant entry for the requesting user
+      if (!chatSession.participants.has((req as any).user?.id)) {
+        const user = (req as any).user;
+        chatSession.participants.set(user.id, {
+          userId: user.id,
+          username:
+            `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+            user.email ||
+            "Unknown User",
+          socketId: "", // Will be set when user connects via WebSocket
+          isTyping: false,
+          lastSeen: new Date(),
+          unreadCount: 0,
         });
       }
 
@@ -156,22 +155,21 @@ router.get(
         });
       }
 
-      const chatSession = chatService.getChatSession(sessionId);
-      if (!chatSession) {
-        return res.status(404).json({
-          success: false,
-          message: "Chat session not found",
-        });
-      }
+      const chatSession = chatService.getOrCreateChatSession(sessionId);
 
-      // Check access
-      const userParticipant = chatSession.participants.get(
-        (req as any).user?.id
-      );
-      if (!userParticipant) {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied to this chat session",
+      // For new sessions, create a default participant entry for the requesting user
+      if (!chatSession.participants.has((req as any).user?.id)) {
+        const user = (req as any).user;
+        chatSession.participants.set(user.id, {
+          userId: user.id,
+          username:
+            `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+            user.email ||
+            "Unknown User",
+          socketId: "", // Will be set when user connects via WebSocket
+          isTyping: false,
+          lastSeen: new Date(),
+          unreadCount: 0,
         });
       }
 

@@ -784,6 +784,23 @@ export default class RealtimeChatService {
     return this.chatSessions.get(sessionId);
   }
 
+  public getOrCreateChatSession(sessionId: string): ChatSession {
+    let session = this.chatSessions.get(sessionId);
+    if (!session) {
+      session = {
+        id: sessionId,
+        sessionId,
+        participants: new Map(),
+        messages: [],
+        threads: new Map(),
+        createdAt: new Date(),
+        lastActivity: new Date(),
+      };
+      this.chatSessions.set(sessionId, session);
+    }
+    return session;
+  }
+
   public getSessionParticipants(sessionId: string): ChatParticipant[] {
     const session = this.chatSessions.get(sessionId);
     return session ? Array.from(session.participants.values()) : [];

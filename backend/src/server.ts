@@ -205,6 +205,10 @@ const startServer = async () => {
     (global as any).realtimeChatService = realtimeChatService;
     (global as any).webrtcService = webrtcService;
 
+    // Also make communication services available in app.locals for routes
+    app.locals.chatService = realtimeChatService;
+    app.locals.webrtcService = webrtcService;
+
     httpServer.listen(config.port, () => {
       console.log(`🚀 Server running on port ${config.port}`);
       console.log(`🌍 Environment: ${config.nodeEnv}`);
