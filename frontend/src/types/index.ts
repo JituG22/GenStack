@@ -180,3 +180,75 @@ export interface FlowEdge {
   sourceHandle?: string;
   targetHandle?: string;
 }
+
+// GitHub Account types
+export interface GitHubAccount {
+  id: string;
+  nickname: string;
+  username: string;
+  email?: string;
+  avatarUrl?: string;
+  githubId: number;
+  githubLogin: string;
+  githubName?: string;
+  githubType: "User" | "Organization";
+  scopes: string[];
+  permissions: {
+    createRepo: boolean;
+    deleteRepo: boolean;
+    readRepo: boolean;
+    writeRepo: boolean;
+    adminRepo: boolean;
+  };
+  isActive: boolean;
+  isDefault: boolean;
+  lastUsedAt?: string;
+  lastValidatedAt?: string;
+  validationStatus: "valid" | "invalid" | "pending" | "expired";
+  validationError?: string;
+  stats: {
+    repositoriesCreated: number;
+    lastRepositoryCreated?: string;
+    totalApiCalls: number;
+    lastApiCall?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GitHubAccountValidation {
+  isValid: boolean;
+  user?: {
+    id: number;
+    login: string;
+    name: string;
+    email: string;
+    avatar_url: string;
+    type: string;
+  };
+  scopes?: string[];
+  error?: string;
+}
+
+export interface CreateGitHubAccountRequest {
+  nickname: string;
+  token: string;
+  setAsDefault?: boolean;
+}
+
+export interface UpdateGitHubAccountRequest {
+  nickname?: string;
+  isActive?: boolean;
+  setAsDefault?: boolean;
+}
+
+export interface GitHubAccountStatistics {
+  summary: {
+    totalAccounts: number;
+    validAccounts: number;
+    totalRepositoriesCreated: number;
+    totalApiCalls: number;
+    lastActivity: string | null;
+  };
+  accounts: GitHubAccount[];
+}
