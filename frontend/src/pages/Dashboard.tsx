@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { usePaginatedData } from "../hooks/usePaginatedData";
 import { projectsApi, nodesApi, templatesApi } from "../lib/api";
@@ -13,6 +13,7 @@ import {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<
     "projects" | "nodes" | "templates"
   >("projects");
@@ -34,6 +35,65 @@ export default function Dashboard() {
     defaultLimit: 5,
     defaultSortBy: "downloads",
   });
+
+  // Action handlers
+  const handleView = (item: any) => {
+    switch (activeTab) {
+      case "projects":
+        navigate(`/projects/${item.id}`);
+        break;
+      case "nodes":
+        navigate(`/nodes/${item.id}`);
+        break;
+      case "templates":
+        navigate(`/templates/${item.id}`);
+        break;
+    }
+  };
+
+  const handleEdit = (item: any) => {
+    switch (activeTab) {
+      case "projects":
+        navigate(`/projects/${item.id}/edit`);
+        break;
+      case "nodes":
+        navigate(`/nodes/${item.id}/edit`);
+        break;
+      case "templates":
+        navigate(`/templates/${item.id}/edit`);
+        break;
+    }
+  };
+
+  const handleDelete = async (item: any) => {
+    if (
+      !confirm(
+        `Are you sure you want to delete this ${activeTab.slice(0, -1)}?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      switch (activeTab) {
+        case "projects":
+          await projectsApi.deleteProject(item.id);
+          projectsData.refetch();
+          break;
+        case "nodes":
+          await nodesApi.deleteNode(item.id);
+          nodesData.refetch();
+          break;
+        case "templates":
+          await templatesApi.deleteTemplate(item.id);
+          templatesData.refetch();
+          break;
+      }
+    } catch (error) {
+      console.error(`Error deleting ${activeTab.slice(0, -1)}:`, error);
+      alert(`Failed to delete ${activeTab.slice(0, -1)}. Please try again.`);
+    }
+  };
 
   const getCurrentData = () => {
     switch (activeTab) {
@@ -332,9 +392,9 @@ export default function Dashboard() {
               }
             }}
             actions={{
-              onView: (item) => console.log("View", item),
-              onEdit: (item) => console.log("Edit", item),
-              onDelete: (item) => console.log("Delete", item),
+              onView: handleView,
+              onEdit: handleEdit,
+              onDelete: handleDelete,
             }}
           />
         </div>

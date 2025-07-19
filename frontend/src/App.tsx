@@ -10,6 +10,9 @@ import {
   CollaborativeTestPage,
   EnhancedTemplatesPage,
 } from "./pages";
+import ProjectDetailPage from "./pages/ProjectDetailPage";
+import NodeDetailPage from "./pages/NodeDetailPage";
+import TemplateDetailPage from "./pages/TemplateDetailPage";
 import CollaborationDemo from "./pages/CollaborationDemo";
 import MonitoringDemo from "./pages/MonitoringDemo";
 
@@ -73,6 +76,66 @@ function App() {
                       <ProtectedRoute>
                         <Layout>
                           <ProjectsPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/projects/:id"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <ProjectDetailPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/projects/:id/edit"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <ProjectsPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/nodes/:id"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <NodeDetailPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/nodes/:id/edit"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <EnhancedTemplatesPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/templates/:id"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <TemplateDetailPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/templates/:id/edit"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <EnhancedTemplatesPage />
                         </Layout>
                       </ProtectedRoute>
                     }
