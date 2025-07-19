@@ -76,7 +76,7 @@ class RealtimeCollaborationService {
     "#85C1E9",
   ];
 
-  constructor(server: HTTPServer) {
+  constructor(server: HTTPServer, socketIOServer?: any) {
     // Initialize Redis
     this.redis = new Redis({
       host: process.env.REDIS_HOST || "localhost",
@@ -84,14 +84,19 @@ class RealtimeCollaborationService {
       maxRetriesPerRequest: 3,
     });
 
-    // Initialize Socket.IO (will use in-memory adapter for now)
-    this.io = new SocketIOServer(server, {
-      cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:3000",
-        methods: ["GET", "POST"],
-        credentials: true,
-      },
-    });
+    // Use provided Socket.IO server or create a new one
+    if (socketIOServer) {
+      this.io = socketIOServer;
+    } else {
+      // Initialize Socket.IO (will use in-memory adapter for now)
+      this.io = new SocketIOServer(server, {
+        cors: {
+          origin: process.env.FRONTEND_URL || "http://localhost:3000",
+          methods: ["GET", "POST"],
+          credentials: true,
+        },
+      });
+    }
 
     this.setupSocketHandlers();
     this.setupCleanupTasks();

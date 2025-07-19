@@ -71,22 +71,17 @@ interface TypingIndicator {
 
 export default class RealtimeChatService {
   private io: SocketIOServer;
+  private chatNamespace: any;
   private redis: Redis;
   private chatSessions: Map<string, ChatSession> = new Map();
   private typingIndicators: Map<string, TypingIndicator> = new Map();
   private messageHistory: Map<string, ChatMessage[]> = new Map();
 
-  constructor(httpServer: HTTPServer) {
-    this.io = new SocketIOServer(httpServer, {
-      cors: {
-        origin: process.env.CORS_ORIGIN?.split(",") || [
-          "http://localhost:3000",
-        ],
-        methods: ["GET", "POST"],
-        credentials: true,
-      },
-      path: "/chat/socket.io/",
-    });
+  constructor(socketIOServer: SocketIOServer) {
+    this.io = socketIOServer;
+
+    // Create a dedicated namespace for chat
+    this.chatNamespace = this.io.of("/chat");
 
     // Initialize Redis for message persistence
     this.redis = new Redis({
@@ -101,39 +96,39 @@ export default class RealtimeChatService {
   }
 
   private setupEventHandlers(): void {
-    this.io.on("connection", (socket) => {
+    this.chatNamespace.on("connection", (socket: any) => {
       console.log(`Chat client connected: ${socket.id}`);
 
       // Join chat session
-      socket.on("join-chat", this.handleJoinChat.bind(this, socket));
+      socket.on("join_session", this.handleJoinChat.bind(this, socket));
 
       // Leave chat session
-      socket.on("leave-chat", this.handleLeaveChat.bind(this, socket));
+      socket.on("leave_session", this.handleLeaveChat.bind(this, socket));
 
       // Send message
-      socket.on("send-message", this.handleSendMessage.bind(this, socket));
+      socket.on("send_message", this.handleSendMessage.bind(this, socket));
 
       // Typing indicators
-      socket.on("typing-start", this.handleTypingStart.bind(this, socket));
-      socket.on("typing-stop", this.handleTypingStop.bind(this, socket));
+      socket.on("start_typing", this.handleTypingStart.bind(this, socket));
+      socket.on("stop_typing", this.handleTypingStop.bind(this, socket));
 
       // Message reactions
-      socket.on("add-reaction", this.handleAddReaction.bind(this, socket));
+      socket.on("add_reaction", this.handleAddReaction.bind(this, socket));
       socket.on(
-        "remove-reaction",
+        "remove_reaction",
         this.handleRemoveReaction.bind(this, socket)
       );
 
       // Message editing
-      socket.on("edit-message", this.handleEditMessage.bind(this, socket));
-      socket.on("delete-message", this.handleDeleteMessage.bind(this, socket));
+      socket.on("edit_message", this.handleEditMessage.bind(this, socket));
+      socket.on("delete_message", this.handleDeleteMessage.bind(this, socket));
 
       // Thread management
-      socket.on("create-thread", this.handleCreateThread.bind(this, socket));
-      socket.on("join-thread", this.handleJoinThread.bind(this, socket));
+      socket.on("create_thread", this.handleCreateThread.bind(this, socket));
+      socket.on("join_thread", this.handleJoinThread.bind(this, socket));
 
       // Message history
-      socket.on("load-history", this.handleLoadHistory.bind(this, socket));
+      socket.on("load_history", this.handleLoadHistory.bind(this, socket));
 
       // Disconnect
       socket.on("disconnect", this.handleDisconnect.bind(this, socket));
@@ -279,7 +274,9 @@ export default class RealtimeChatService {
       await this.persistMessage(message);
 
       // Broadcast message to all participants
-      this.io.to(`chat-${data.sessionId}`).emit("new-message", message);
+      this.chatNamespace
+        .to(`chat-${data.sessionId}`)
+        .emit("message_received", message);
 
       // Handle mentions - send notifications
       if (message.mentions && message.mentions.length > 0) {
@@ -318,7 +315,7 @@ export default class RealtimeChatService {
       });
 
       // Broadcast typing indicator to other participants
-      socket.to(`chat-${data.sessionId}`).emit("typing-start", {
+      socket.to(`chat-${data.sessionId}`).emit("user_typing", {
         userId: data.userId,
         username: data.username,
       });
@@ -327,7 +324,7 @@ export default class RealtimeChatService {
       setTimeout(() => {
         if (this.typingIndicators.has(typingKey)) {
           this.typingIndicators.delete(typingKey);
-          socket.to(`chat-${data.sessionId}`).emit("typing-stop", {
+          socket.to(`chat-${data.sessionId}`).emit("user_stopped_typing", {
             userId: data.userId,
           });
         }
@@ -345,7 +342,7 @@ export default class RealtimeChatService {
       const typingKey = `${data.sessionId}:${data.userId}`;
       this.typingIndicators.delete(typingKey);
 
-      socket.to(`chat-${data.sessionId}`).emit("typing-stop", {
+      socket.to(`chat-${data.sessionId}`).emit("user_stopped_typing", {
         userId: data.userId,
       });
     } catch (error) {
@@ -388,7 +385,7 @@ export default class RealtimeChatService {
         await this.updateMessageInRedis(message);
 
         // Broadcast reaction
-        this.io.to(`chat-${data.sessionId}`).emit("reaction-added", {
+        this.chatNamespace.to(`chat-${data.sessionId}`).emit("reaction_added", {
           messageId: data.messageId,
           reaction: {
             emoji: data.emoji,
@@ -427,7 +424,7 @@ export default class RealtimeChatService {
       await this.updateMessageInRedis(message);
 
       // Broadcast reaction removal
-      this.io.to(`chat-${data.sessionId}`).emit("reaction-removed", {
+      this.chatNamespace.to(`chat-${data.sessionId}`).emit("reaction_removed", {
         messageId: data.messageId,
         emoji: data.emoji,
         userId: data.userId,
@@ -462,7 +459,7 @@ export default class RealtimeChatService {
       await this.updateMessageInRedis(message);
 
       // Broadcast edit
-      this.io.to(`chat-${data.sessionId}`).emit("message-edited", {
+      this.chatNamespace.to(`chat-${data.sessionId}`).emit("message_updated", {
         messageId: data.messageId,
         newContent: data.newContent,
         editedAt: message.editedAt,
@@ -499,7 +496,7 @@ export default class RealtimeChatService {
       await this.deleteMessageFromRedis(data.messageId);
 
       // Broadcast deletion
-      this.io.to(`chat-${data.sessionId}`).emit("message-deleted", {
+      this.chatNamespace.to(`chat-${data.sessionId}`).emit("message_deleted", {
         messageId: data.messageId,
       });
     } catch (error) {
@@ -538,7 +535,9 @@ export default class RealtimeChatService {
       await this.persistThread(thread);
 
       // Broadcast thread creation
-      this.io.to(`chat-${data.sessionId}`).emit("thread-created", thread);
+      this.chatNamespace
+        .to(`chat-${data.sessionId}`)
+        .emit("thread_created", thread);
     } catch (error) {
       console.error("Error handling create thread:", error);
     }

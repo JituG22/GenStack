@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import NotificationBell from "./NotificationBell";
+import CommunicationPanel from "./CommunicationPanel";
 import {
   HomeIcon,
   DocumentIcon,
@@ -14,7 +15,6 @@ import {
   UsersIcon,
   Cog6ToothIcon,
   RocketLaunchIcon,
-  CodeBracketIcon,
 } from "@heroicons/react/24/outline";
 
 interface LayoutProps {
@@ -205,9 +205,14 @@ export function Layout({ children }: LayoutProps) {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 relative overflow-y-auto focus:outline-none">
-          {children}
-        </main>
+        <div className="flex-1 flex overflow-hidden">
+          <main className="flex-1 relative overflow-y-auto focus:outline-none">
+            {children}
+          </main>
+
+          {/* Communication Panel */}
+          <CommunicationPanel className="w-96" />
+        </div>
       </div>
     </div>
   );

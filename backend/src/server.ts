@@ -161,20 +161,26 @@ const startServer = async () => {
     // Connect to database
     await connectDB();
 
-    // Initialize Simple WebSocket service
+    // Initialize Simple WebSocket service first
     const wsService = initializeSimpleWebSocket(httpServer);
     // Make it globally available for API routes
     (global as any).simpleWebSocketService = wsService;
 
-    // Initialize Real-time Collaboration Service
-    const realtimeService = new RealtimeCollaborationService(httpServer);
+    // Get the Socket.IO server instance to share
+    const sharedSocketIOServer = wsService.getServer();
+
+    // Initialize Real-time Collaboration Service (reuse the same Socket.IO server)
+    const realtimeService = new RealtimeCollaborationService(
+      httpServer,
+      sharedSocketIOServer
+    );
     // Make it available for API routes
     app.locals.realtimeService = realtimeService;
 
     // Initialize Collaboration Service (reuse the same Socket.IO server)
     const collaborationService = new CollaborationService(
       httpServer,
-      wsService.getServer()
+      sharedSocketIOServer
     );
     // Make it globally available for API routes
     (global as any).collaborationService = collaborationService;
@@ -186,9 +192,9 @@ const startServer = async () => {
     const annotationService = new AnnotationService();
     const errorBoundaryService = new ErrorBoundaryService();
 
-    // Initialize Communication Services
-    const realtimeChatService = new RealtimeChatService(httpServer);
-    const webrtcService = new WebRTCService(httpServer);
+    // Initialize Communication Services using the shared Socket.IO server
+    const realtimeChatService = new RealtimeChatService(sharedSocketIOServer);
+    const webrtcService = new WebRTCService(sharedSocketIOServer);
 
     // Make services globally available for API routes
     (global as any).operationalTransform = operationalTransform;

@@ -78,22 +78,17 @@ interface CallSession {
 
 export default class WebRTCService {
   private io: SocketIOServer;
+  private webrtcNamespace: any;
   private redis: Redis;
   private rooms: Map<string, WebRTCRoom> = new Map();
   private peers: Map<string, WebRTCPeer> = new Map();
   private callSessions: Map<string, CallSession> = new Map();
 
-  constructor(httpServer: HTTPServer) {
-    this.io = new SocketIOServer(httpServer, {
-      cors: {
-        origin: process.env.CORS_ORIGIN?.split(",") || [
-          "http://localhost:3000",
-        ],
-        methods: ["GET", "POST"],
-        credentials: true,
-      },
-      path: "/webrtc/socket.io/",
-    });
+  constructor(socketIOServer: SocketIOServer) {
+    this.io = socketIOServer;
+
+    // Create a dedicated namespace for WebRTC
+    this.webrtcNamespace = this.io.of("/webrtc");
 
     // Initialize Redis for signaling persistence
     this.redis = new Redis({
@@ -108,46 +103,46 @@ export default class WebRTCService {
   }
 
   private setupEventHandlers(): void {
-    this.io.on("connection", (socket) => {
+    this.webrtcNamespace.on("connection", (socket: any) => {
       console.log(`WebRTC client connected: ${socket.id}`);
 
       // Room management
-      socket.on("create-room", this.handleCreateRoom.bind(this, socket));
-      socket.on("join-room", this.handleJoinRoom.bind(this, socket));
-      socket.on("leave-room", this.handleLeaveRoom.bind(this, socket));
+      socket.on("create_room", this.handleCreateRoom.bind(this, socket));
+      socket.on("join_room", this.handleJoinRoom.bind(this, socket));
+      socket.on("leave_room", this.handleLeaveRoom.bind(this, socket));
 
       // WebRTC signaling
-      socket.on("webrtc-offer", this.handleWebRTCOffer.bind(this, socket));
-      socket.on("webrtc-answer", this.handleWebRTCAnswer.bind(this, socket));
+      socket.on("webrtc_offer", this.handleWebRTCOffer.bind(this, socket));
+      socket.on("webrtc_answer", this.handleWebRTCAnswer.bind(this, socket));
       socket.on(
-        "webrtc-ice-candidate",
+        "webrtc_ice_candidate",
         this.handleICECandidate.bind(this, socket)
       );
 
       // Media control
-      socket.on("toggle-audio", this.handleToggleAudio.bind(this, socket));
-      socket.on("toggle-video", this.handleToggleVideo.bind(this, socket));
+      socket.on("toggle_audio", this.handleToggleAudio.bind(this, socket));
+      socket.on("toggle_video", this.handleToggleVideo.bind(this, socket));
       socket.on(
-        "start-screen-share",
+        "start_screen_share",
         this.handleStartScreenShare.bind(this, socket)
       );
       socket.on(
-        "stop-screen-share",
+        "stop_screen_share",
         this.handleStopScreenShare.bind(this, socket)
       );
 
       // Recording
       socket.on(
-        "start-recording",
+        "start_recording",
         this.handleStartRecording.bind(this, socket)
       );
-      socket.on("stop-recording", this.handleStopRecording.bind(this, socket));
+      socket.on("stop_recording", this.handleStopRecording.bind(this, socket));
 
       // Call management
-      socket.on("initiate-call", this.handleInitiateCall.bind(this, socket));
-      socket.on("accept-call", this.handleAcceptCall.bind(this, socket));
-      socket.on("reject-call", this.handleRejectCall.bind(this, socket));
-      socket.on("end-call", this.handleEndCall.bind(this, socket));
+      socket.on("initiate_call", this.handleInitiateCall.bind(this, socket));
+      socket.on("accept_call", this.handleAcceptCall.bind(this, socket));
+      socket.on("reject_call", this.handleRejectCall.bind(this, socket));
+      socket.on("end_call", this.handleEndCall.bind(this, socket));
 
       // Disconnect
       socket.on("disconnect", this.handleDisconnect.bind(this, socket));
@@ -331,7 +326,7 @@ export default class WebRTCService {
         (p) => p.id === data.targetPeerId
       );
       if (targetPeer) {
-        this.io.to(targetPeer.socketId).emit("webrtc-offer", {
+        this.webrtcNamespace.to(targetPeer.socketId).emit("webrtc_offer", {
           from: peer.id,
           offer: data.offer,
           fromUser: {
@@ -373,7 +368,7 @@ export default class WebRTCService {
         (p) => p.id === data.targetPeerId
       );
       if (targetPeer) {
-        this.io.to(targetPeer.socketId).emit("webrtc-answer", {
+        this.webrtcNamespace.to(targetPeer.socketId).emit("webrtc_answer", {
           from: peer.id,
           answer: data.answer,
           fromUser: {
@@ -415,10 +410,12 @@ export default class WebRTCService {
         (p) => p.id === data.targetPeerId
       );
       if (targetPeer) {
-        this.io.to(targetPeer.socketId).emit("webrtc-ice-candidate", {
-          from: peer.id,
-          candidate: data.candidate,
-        });
+        this.webrtcNamespace
+          .to(targetPeer.socketId)
+          .emit("webrtc_ice_candidate", {
+            from: peer.id,
+            candidate: data.candidate,
+          });
       }
 
       await this.persistSignalingMessage(signalingMessage);
@@ -536,11 +533,13 @@ export default class WebRTCService {
       room.isRecording = true;
       room.recordingStartedAt = new Date();
 
-      this.io.to(`webrtc-${data.roomId}`).emit("recording-started", {
-        roomId: data.roomId,
-        startedBy: peer.username,
-        startedAt: room.recordingStartedAt,
-      });
+      this.webrtcNamespace
+        .to(`webrtc-${data.roomId}`)
+        .emit("recording_started", {
+          roomId: data.roomId,
+          startedBy: peer.username,
+          startedAt: room.recordingStartedAt,
+        });
 
       await this.updateRoomInRedis(room);
     } catch (error) {
@@ -570,11 +569,13 @@ export default class WebRTCService {
         ? new Date().getTime() - room.recordingStartedAt.getTime()
         : 0;
 
-      this.io.to(`webrtc-${data.roomId}`).emit("recording-stopped", {
-        roomId: data.roomId,
-        stoppedBy: peer.username,
-        duration: recordingDuration,
-      });
+      this.webrtcNamespace
+        .to(`webrtc-${data.roomId}`)
+        .emit("recording_stopped", {
+          roomId: data.roomId,
+          stoppedBy: peer.username,
+          duration: recordingDuration,
+        });
 
       await this.updateRoomInRedis(room);
     } catch (error) {
