@@ -58,7 +58,7 @@ export const ProjectsPage: React.FC = () => {
   const checkGitHubHealth = async () => {
     try {
       const response = await githubProjectsApi.getHealth();
-      setGithubHealthy(response.success && response.data?.config?.ready);
+      setGithubHealthy(response.success && response.config.ready);
     } catch (error) {
       setGithubHealthy(false);
     }

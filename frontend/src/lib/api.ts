@@ -39,6 +39,18 @@ export interface ValidationError {
   }>;
 }
 
+export interface GitHubHealthResponse {
+  success: boolean;
+  message: string;
+  config: {
+    enabled: boolean;
+    hasToken: boolean;
+    hasUsername: boolean;
+    ready: boolean;
+  };
+  timestamp: string;
+}
+
 // Query parameters for list endpoints
 export interface QueryParams {
   page?: number;
@@ -339,8 +351,8 @@ export const analyticsApi = {
 
 // GitHub-enabled Projects API
 export const githubProjectsApi = {
-  async getHealth(): Promise<ApiResponse<any>> {
-    return fetchApi<ApiResponse<any>>("/projects-github/health");
+  async getHealth(): Promise<GitHubHealthResponse> {
+    return fetchApi<GitHubHealthResponse>("/projects-github/health");
   },
 
   async createProjectWithGitHub(projectData: any): Promise<ApiResponse<any>> {
