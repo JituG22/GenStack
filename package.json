@@ -37,5 +37,9 @@
   "workspaces": [
     "frontend",
     "backend"
-  ]
+  ],
+  "dependencies": {
+    "node-fetch": "^2.7.0",
+    "socket.io-client": "^4.8.1"
+  }
 }
