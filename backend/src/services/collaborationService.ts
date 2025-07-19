@@ -48,7 +48,7 @@ export class CollaborationService {
   constructor(server: HttpServer, existingIo?: Server) {
     if (existingIo) {
       // Use a namespace for collaboration to avoid conflicts
-      this.io = existingIo.of('/collaboration');
+      this.io = existingIo.of("/collaboration");
     } else {
       this.io = new Server(server, {
         cors: {
