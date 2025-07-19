@@ -267,15 +267,92 @@ export const NodeTemplateManager: React.FC<NodeTemplateManagerProps> = ({
       setLoading(true);
       setError(null);
 
-      // For now, use built-in templates
-      // In real implementation, fetch from API
-      setTemplates(builtInTemplates);
+      // Fetch templates from API
+      const response = await templatesApi.getTemplates({
+        page: 1,
+        limit: 50,
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      });
+
+      if (response.success) {
+        // Combine API templates with built-in templates
+        const apiTemplates = response.data.map((template: any) => ({
+          id: template.id,
+          name: template.name,
+          description: template.description,
+          type: template.category || "custom",
+          category: template.category || "Custom",
+          tags: template.tags || [],
+          isPublic: template.isPublic || false,
+          usageCount: template.downloads || 0,
+          rating: template.rating?.average || 0,
+          organization: template.organization,
+          createdBy:
+            template.createdBy?.firstName && template.createdBy?.lastName
+              ? `${template.createdBy.firstName} ${template.createdBy.lastName}`
+              : template.createdBy?.email || "Unknown",
+          createdAt: template.createdAt,
+          updatedAt: template.updatedAt,
+          properties: template.configuration || {},
+          defaultProperties: {},
+          validations: [],
+          icon: getTemplateIcon(template.category),
+          color: getTemplateColor(template.category),
+          isCustom: !template.isOfficial,
+          metadata: {
+            nodes: template.nodes?.length || 0,
+            connections: 0,
+            complexity: "medium" as const,
+          },
+          configuration: template.configuration || {},
+        }));
+
+        // Combine with built-in templates
+        setTemplates([...apiTemplates, ...builtInTemplates]);
+      } else {
+        // Fallback to built-in templates if API fails
+        setTemplates(builtInTemplates);
+      }
     } catch (err) {
-      setError("Failed to load templates");
       console.error("Template fetch error:", err);
+      // Fallback to built-in templates on error
+      setTemplates(builtInTemplates);
+      setError(
+        "Failed to load templates from server, showing built-in templates"
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper functions for template styling
+  const getTemplateIcon = (category: string) => {
+    const iconMap: Record<string, string> = {
+      component: "🧩",
+      workflow: "⚡",
+      integration: "🔗",
+      custom: "🛠️",
+      Frontend: "🎨",
+      Backend: "⚙️",
+      Database: "🗄️",
+      DevOps: "🚀",
+    };
+    return iconMap[category] || "📦";
+  };
+
+  const getTemplateColor = (category: string) => {
+    const colorMap: Record<string, string> = {
+      component: "#3B82F6",
+      workflow: "#10B981",
+      integration: "#F59E0B",
+      custom: "#6366F1",
+      Frontend: "#EC4899",
+      Backend: "#8B5CF6",
+      Database: "#06B6D4",
+      DevOps: "#EF4444",
+    };
+    return colorMap[category] || "#6B7280";
   };
 
   const filteredTemplates = templates.filter((template) => {

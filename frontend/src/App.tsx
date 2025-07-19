@@ -4,12 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
-import {
-  ProjectsPage,
-  AnalyticsPage,
-  CollaborativeTestPage,
-  EnhancedTemplatesPage,
-} from "./pages";
+import { ProjectsPage, AnalyticsPage, CollaborativeTestPage } from "./pages";
+import TemplatesPage from "./pages/TemplatesPage";
 import ProjectDetailPage from "./pages/ProjectDetailPage";
 import NodeDetailPage from "./pages/NodeDetailPage";
 import TemplateDetailPage from "./pages/TemplateDetailPage";
@@ -55,7 +51,7 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <Layout>
-                          <EnhancedTemplatesPage />
+                          <TemplatesPage />
                         </Layout>
                       </ProtectedRoute>
                     }
@@ -115,7 +111,7 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <Layout>
-                          <EnhancedTemplatesPage />
+                          <TemplatesPage />
                         </Layout>
                       </ProtectedRoute>
                     }
@@ -135,7 +131,7 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <Layout>
-                          <EnhancedTemplatesPage />
+                          <TemplatesPage />
                         </Layout>
                       </ProtectedRoute>
                     }
@@ -145,7 +141,7 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <Layout>
-                          <EnhancedTemplatesPage />
+                          <TemplatesPage />
                         </Layout>
                       </ProtectedRoute>
                     }
