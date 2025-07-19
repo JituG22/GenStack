@@ -11,10 +11,10 @@ const githubService = new GitHubService();
  */
 router.get("/health", async (req: Request, res: Response): Promise<void> => {
   try {
-    const isEnabled = process.env.GITHUB_ENABLED === 'true';
+    const isEnabled = process.env.GITHUB_ENABLED === "true";
     const hasToken = !!process.env.GITHUB_TOKEN;
     const hasUsername = !!process.env.GITHUB_USERNAME;
-    
+
     res.status(200).json({
       success: true,
       message: "GitHub integration routes are accessible",
@@ -22,7 +22,7 @@ router.get("/health", async (req: Request, res: Response): Promise<void> => {
         enabled: isEnabled,
         hasToken,
         hasUsername,
-        ready: isEnabled && hasToken && hasUsername
+        ready: isEnabled && hasToken && hasUsername,
       },
       timestamp: new Date().toISOString(),
     });
@@ -40,12 +40,20 @@ router.get("/health", async (req: Request, res: Response): Promise<void> => {
  */
 router.post("/", auth, async (req: any, res: Response): Promise<void> => {
   try {
-    const { name, description, organization, isPublic, tags, github, githubConfig, enableGitHub } = req.body;
+    const {
+      name,
+      description,
+      isPublic,
+      tags,
+      github,
+      githubConfig,
+      enableGitHub,
+    } = req.body;
 
-    if (!name || !organization) {
+    if (!name) {
       res.status(400).json({
         success: false,
-        error: "Name and organization are required",
+        error: "Name is required",
       });
       return;
     }
@@ -53,7 +61,7 @@ router.post("/", auth, async (req: any, res: Response): Promise<void> => {
     const projectData: any = {
       name,
       description,
-      organization,
+      organization: req.user.organization,
       createdBy: req.user.id,
       isPublic: isPublic || false,
       tags: tags || [],
@@ -68,7 +76,9 @@ router.post("/", auth, async (req: any, res: Response): Promise<void> => {
         console.log("Creating GitHub repository...");
 
         const repoData = {
-          name: githubConfig?.repositoryName || name.toLowerCase().replace(/\s+/g, '-'),
+          name:
+            githubConfig?.repositoryName ||
+            name.toLowerCase().replace(/\s+/g, "-"),
           description: description || `GenStack project: ${name}`,
           private: !isPublic,
           auto_init: githubConfig?.createReadme !== false,
@@ -77,7 +87,11 @@ router.post("/", auth, async (req: any, res: Response): Promise<void> => {
         const githubResponse = await githubService.createRepository(repoData);
 
         if (githubResponse.success && githubResponse.data) {
-          console.log(`GitHub repository created successfully: ${(githubResponse.data as any).html_url}`);
+          console.log(
+            `GitHub repository created successfully: ${
+              (githubResponse.data as any).html_url
+            }`
+          );
 
           // Update GitHub configuration
           projectData.github.enabled = true;
@@ -88,15 +102,20 @@ router.post("/", auth, async (req: any, res: Response): Promise<void> => {
           projectData.github.syncStatus = "synced";
           projectData.github.syncErrors = [];
         } else {
-          throw new Error(githubResponse.error?.message || "Failed to create GitHub repository");
+          throw new Error(
+            githubResponse.error?.message ||
+              "Failed to create GitHub repository"
+          );
         }
       } catch (githubError: any) {
         console.error("GitHub repository creation failed:", githubError);
-        
+
         // Continue with project creation but mark GitHub as failed
         projectData.github.enabled = false;
         projectData.github.syncStatus = "error";
-        projectData.github.syncErrors = [`GitHub repository creation failed: ${githubError.message}`];
+        projectData.github.syncErrors = [
+          `GitHub repository creation failed: ${githubError.message}`,
+        ];
       }
     }
 
@@ -142,7 +161,7 @@ router.put("/:id", auth, async (req: any, res: Response): Promise<void> => {
     });
   } catch (error: any) {
     console.error("Update project with GitHub error:", error);
-    
+
     if (error.message === "Project not found") {
       res.status(404).json({
         success: false,
@@ -180,7 +199,7 @@ router.delete("/:id", auth, async (req: any, res: Response): Promise<void> => {
     });
   } catch (error: any) {
     console.error("Delete project with GitHub error:", error);
-    
+
     if (error.message === "Project not found") {
       res.status(404).json({
         success: false,
@@ -203,83 +222,93 @@ router.delete("/:id", auth, async (req: any, res: Response): Promise<void> => {
 /**
  * Manually sync a project with its GitHub repository
  */
-router.post("/:id/sync", auth, async (req: any, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
+router.post(
+  "/:id/sync",
+  auth,
+  async (req: any, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
 
-    const syncedProject = await projectGitHubService.syncProjectWithGitHub(
-      id,
-      req.user.id
-    );
+      const syncedProject = await projectGitHubService.syncProjectWithGitHub(
+        id,
+        req.user.id
+      );
 
-    res.json({
-      success: true,
-      data: syncedProject,
-    });
-  } catch (error: any) {
-    console.error("Sync project with GitHub error:", error);
-    
-    if (error.message === "Project not found") {
-      res.status(404).json({
-        success: false,
-        error: "Project not found",
+      res.json({
+        success: true,
+        data: syncedProject,
       });
-    } else if (error.message === "Unauthorized to sync this project") {
-      res.status(403).json({
-        success: false,
-        error: "Unauthorized to sync this project",
-      });
-    } else if (error.message === "GitHub integration is not enabled for this project") {
-      res.status(400).json({
-        success: false,
-        error: "GitHub integration is not enabled for this project",
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        error: error.message || "Failed to sync project",
-      });
+    } catch (error: any) {
+      console.error("Sync project with GitHub error:", error);
+
+      if (error.message === "Project not found") {
+        res.status(404).json({
+          success: false,
+          error: "Project not found",
+        });
+      } else if (error.message === "Unauthorized to sync this project") {
+        res.status(403).json({
+          success: false,
+          error: "Unauthorized to sync this project",
+        });
+      } else if (
+        error.message === "GitHub integration is not enabled for this project"
+      ) {
+        res.status(400).json({
+          success: false,
+          error: "GitHub integration is not enabled for this project",
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: error.message || "Failed to sync project",
+        });
+      }
     }
   }
-});
+);
 
 /**
  * Get GitHub repository status for a project
  */
-router.get("/:id/github-status", auth, async (req: any, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
+router.get(
+  "/:id/github-status",
+  auth,
+  async (req: any, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
 
-    const githubStatus = await projectGitHubService.getGitHubStatus(
-      id,
-      req.user.id
-    );
+      const githubStatus = await projectGitHubService.getGitHubStatus(
+        id,
+        req.user.id
+      );
 
-    res.json({
-      success: true,
-      data: githubStatus,
-    });
-  } catch (error: any) {
-    console.error("Get GitHub status error:", error);
-    
-    if (error.message === "Project not found") {
-      res.status(404).json({
-        success: false,
-        error: "Project not found",
+      res.json({
+        success: true,
+        data: githubStatus,
       });
-    } else if (error.message === "Unauthorized to access this project") {
-      res.status(403).json({
-        success: false,
-        error: "Unauthorized to access this project",
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        error: error.message || "Failed to get GitHub status",
-      });
+    } catch (error: any) {
+      console.error("Get GitHub status error:", error);
+
+      if (error.message === "Project not found") {
+        res.status(404).json({
+          success: false,
+          error: "Project not found",
+        });
+      } else if (error.message === "Unauthorized to access this project") {
+        res.status(403).json({
+          success: false,
+          error: "Unauthorized to access this project",
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: error.message || "Failed to get GitHub status",
+        });
+      }
     }
   }
-});
+);
 
 /**
  * Get all projects with GitHub integration info
@@ -287,14 +316,14 @@ router.get("/:id/github-status", auth, async (req: any, res: Response): Promise<
 router.get("/", auth, async (req: any, res: Response): Promise<void> => {
   try {
     const { organization, github, page = 1, limit = 10 } = req.query;
-    
+
     // Build filter object
     const filter: any = {};
-    
+
     if (organization) {
       filter.organization = organization;
     }
-    
+
     if (github !== undefined) {
       filter["github.enabled"] = github === "true";
     }

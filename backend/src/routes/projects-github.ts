@@ -43,7 +43,6 @@ router.post("/", auth, async (req: any, res: Response): Promise<void> => {
     const {
       name,
       description,
-      organization,
       isPublic,
       tags,
       github,
@@ -51,10 +50,10 @@ router.post("/", auth, async (req: any, res: Response): Promise<void> => {
       enableGitHub,
     } = req.body;
 
-    if (!name || !organization) {
+    if (!name) {
       res.status(400).json({
         success: false,
-        error: "Name and organization are required",
+        error: "Name is required",
       });
       return;
     }
@@ -62,7 +61,7 @@ router.post("/", auth, async (req: any, res: Response): Promise<void> => {
     const projectData: any = {
       name,
       description,
-      organization,
+      organization: req.user.organization,
       createdBy: req.user.id,
       isPublic: isPublic || false,
       tags: tags || [],

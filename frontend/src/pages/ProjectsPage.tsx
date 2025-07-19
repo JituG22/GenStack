@@ -25,7 +25,7 @@ export const ProjectsPage: React.FC = () => {
     name: "",
     description: "",
     enableGitHub: false,
-    isPublic: false,
+    isPublic: true, // Default to public repository (private checkbox unchecked)
     githubConfig: {
       repositoryName: "",
       autoSync: true,
@@ -69,7 +69,7 @@ export const ProjectsPage: React.FC = () => {
       name: "",
       description: "",
       enableGitHub: false,
-      isPublic: false,
+      isPublic: true, // Default to public repository (private checkbox unchecked)
       githubConfig: {
         repositoryName: "",
         autoSync: true,
@@ -302,21 +302,21 @@ export const ProjectsPage: React.FC = () => {
                       <div className="flex items-center">
                         <input
                           type="checkbox"
-                          id="isPublic"
-                          checked={newProject.isPublic}
+                          id="isPrivate"
+                          checked={!newProject.isPublic}
                           onChange={(e) =>
                             setNewProject((prev) => ({
                               ...prev,
-                              isPublic: e.target.checked,
+                              isPublic: !e.target.checked,
                             }))
                           }
                           className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                         />
                         <label
-                          htmlFor="isPublic"
+                          htmlFor="isPrivate"
                           className="ml-2 block text-sm text-gray-700"
                         >
-                          Public repository
+                          Private repository
                         </label>
                       </div>
 
