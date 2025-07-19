@@ -14,6 +14,7 @@ import {
   UsersIcon,
   Cog6ToothIcon,
   RocketLaunchIcon,
+  CodeBracketIcon,
 } from "@heroicons/react/24/outline";
 
 interface LayoutProps {

@@ -54,6 +54,8 @@ export const config = {
 
   // Security
   bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || "12", 10),
+  encryptionKey:
+    process.env.ENCRYPTION_KEY || "your-secret-key-32-characters!!",
 
   // Performance (production only)
   clusterMode: process.env.CLUSTER_MODE === "true",

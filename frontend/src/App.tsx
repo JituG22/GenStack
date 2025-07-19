@@ -14,6 +14,7 @@ import MonitoringDemo from "./pages/MonitoringDemo";
 import { GitHubConfigPage } from "./pages/GitHubConfigPage";
 import IntegrationDemoPage from "./pages/IntegrationDemoPage";
 import EnhancedProjectsPage from "./pages/EnhancedProjectsPage";
+import { RepositoryManagementPage } from "./pages/RepositoryManagementPage";
 
 // Components
 import { Layout } from "./components/Layout";
@@ -219,6 +220,16 @@ function App() {
                       <ProtectedRoute>
                         <Layout>
                           <EnhancedProjectsPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/repository/:projectId"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <RepositoryManagementPage />
                         </Layout>
                       </ProtectedRoute>
                     }

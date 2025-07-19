@@ -36,6 +36,8 @@ import notificationSimpleRoutes from "./routes/notifications-simple";
 import userAnalyticsRoutes from "./routes/user-analytics";
 import analyticsDashboardRoutes from "./routes/analytics-dashboard";
 import errorRoutes from "./routes/errors";
+import repositoryRoutes from "./routes/repository";
+import githubActionsRoutes from "./routes/github-actions";
 
 const app = express();
 const httpServer = createServer(app);
@@ -133,6 +135,8 @@ app.use("/api/notifications-simple", notificationSimpleRoutes);
 app.use("/api/analytics", userAnalyticsRoutes);
 app.use("/api/analytics", analyticsDashboardRoutes);
 app.use("/api/errors", errorRoutes);
+app.use("/api/repository", repositoryRoutes);
+app.use("/api/github-actions", githubActionsRoutes);
 
 // 404 handler
 app.use(notFound);
