@@ -318,7 +318,6 @@ const UserSchemaNew = new Schema<IUserDocumentNew>(
         key: {
           type: String,
           required: true,
-          unique: true,
         },
         permissions: [
           {

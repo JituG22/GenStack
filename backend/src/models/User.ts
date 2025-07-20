@@ -85,7 +85,6 @@ const UserSchema = new Schema<IUserDocument>(
 );
 
 // Index for faster queries
-UserSchema.index({ email: 1 });
 UserSchema.index({ organization: 1 });
 
 // Hash password before saving

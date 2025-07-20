@@ -15,6 +15,7 @@ import {
   UsersIcon,
   Cog6ToothIcon,
   RocketLaunchIcon,
+  ChatBubbleLeftIcon,
 } from "@heroicons/react/24/outline";
 
 interface LayoutProps {
@@ -44,6 +45,7 @@ const navigation = [
 
 export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isChatExpanded, setIsChatExpanded] = useState(true);
   const { user, logout, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -55,6 +57,24 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="h-screen flex overflow-hidden bg-gray-100">
+      {/* Floating Chat Button - Shows when chat is collapsed */}
+      {!isChatExpanded && (
+        <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50">
+          <button
+            onClick={() => setIsChatExpanded(true)}
+            className="relative w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center group"
+            title="Open Chat"
+          >
+            <ChatBubbleLeftIcon className="h-6 w-6" />
+
+            {/* Tooltip */}
+            <div className="absolute right-full mr-3 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+              Open Chat
+            </div>
+          </button>
+        </div>
+      )}
+
       {/* Mobile sidebar */}
       <div
         className={`fixed inset-0 flex z-40 md:hidden ${
@@ -205,13 +225,19 @@ export function Layout({ children }: LayoutProps) {
         </div>
 
         {/* Page content */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden relative">
           <main className="flex-1 relative overflow-y-auto focus:outline-none">
             {children}
           </main>
 
-          {/* Communication Panel */}
-          <CommunicationPanel className="w-96" />
+          {/* Communication Panel - Only render when expanded */}
+          {isChatExpanded && (
+            <CommunicationPanel
+              className="w-96 flex-shrink-0"
+              isExpanded={isChatExpanded}
+              onToggleCollapse={setIsChatExpanded}
+            />
+          )}
         </div>
       </div>
     </div>

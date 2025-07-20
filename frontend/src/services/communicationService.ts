@@ -9,6 +9,12 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   threadId?: string;
+  parentMessageId?: string;
+  replyTo?: {
+    messageId: string;
+    content: string;
+    username: string;
+  };
   reactions?: { [emoji: string]: string[] };
   type: "text" | "code" | "file" | "system";
 }
@@ -272,7 +278,8 @@ class CommunicationService {
     sessionId: string,
     content: string,
     type: "text" | "code" = "text",
-    threadId?: string
+    threadId?: string,
+    parentMessageId?: string
   ): Promise<void> {
     if (!this.chatSocket) throw new Error("Chat socket not connected");
 
@@ -281,6 +288,7 @@ class CommunicationService {
       content,
       type,
       threadId,
+      parentMessageId,
     });
   }
 

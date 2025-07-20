@@ -13,6 +13,11 @@ interface ChatMessage {
   timestamp: Date;
   threadId?: string;
   parentMessageId?: string;
+  replyTo?: {
+    messageId: string;
+    content: string;
+    username: string;
+  };
   codeSnippet?: {
     language: string;
     code: string;
@@ -167,6 +172,15 @@ export default class RealtimeChatService {
 
       const { sessionId, userId, username } = data;
 
+      // Validate required data
+      if (!sessionId || !username) {
+        console.error("❌ Missing required data for join_session");
+        socket.emit("chat-error", {
+          message: "Missing session ID or username",
+        });
+        return;
+      }
+
       // Create or get chat session
       if (!this.chatSessions.has(sessionId)) {
         console.log(`🆕 Creating new chat session: ${sessionId}`);
@@ -183,9 +197,20 @@ export default class RealtimeChatService {
 
       const chatSession = this.chatSessions.get(sessionId)!;
 
+      // Remove any existing participants with the same socketId to prevent duplicates
+      for (const [key, participant] of chatSession.participants.entries()) {
+        if (participant.socketId === socket.id) {
+          chatSession.participants.delete(key);
+          break;
+        }
+      }
+
+      // Use socketId as fallback key if userId is not provided
+      const participantKey = userId || socket.id;
+
       // Add participant
       const participant: ChatParticipant = {
-        userId,
+        userId: userId || socket.id, // Use socketId as fallback
         username,
         socketId: socket.id,
         isTyping: false,
@@ -193,7 +218,7 @@ export default class RealtimeChatService {
         unreadCount: 0,
       };
 
-      chatSession.participants.set(userId, participant);
+      chatSession.participants.set(participantKey, participant);
       socket.join(`chat-${sessionId}`);
 
       console.log(`✅ Participant added:`, {
@@ -291,14 +316,47 @@ export default class RealtimeChatService {
         }))
       );
 
-      const participant = Array.from(chatSession.participants.values()).find(
+      // First try to find by socketId (most reliable)
+      let participant = Array.from(chatSession.participants.values()).find(
         (p) => p.socketId === socket.id
       );
 
+      // If not found by socketId, try to find by userId (fallback)
+      if (!participant) {
+        participant = Array.from(chatSession.participants.values()).find(
+          (p) => p.userId && p.userId !== socket.id && p.socketId === socket.id
+        );
+      }
+
       if (!participant) {
         console.error(`❌ Participant not found for socket ${socket.id}`);
-        socket.emit("chat-error", { message: "Participant not found" });
-        return;
+        console.log("🔄 Attempting to auto-rejoin participant...");
+
+        // Try to auto-rejoin the participant if we can get user info from socket
+        const userInfo = socket.handshake.auth;
+        if (userInfo && userInfo.user) {
+          const autoParticipant: ChatParticipant = {
+            userId: userInfo.user.id || socket.id,
+            username:
+              `${userInfo.user.firstName} ${userInfo.user.lastName}`.trim() ||
+              userInfo.user.email ||
+              "Unknown User",
+            socketId: socket.id,
+            isTyping: false,
+            lastSeen: new Date(),
+            unreadCount: 0,
+          };
+
+          const participantKey = userInfo.user.id || socket.id;
+          chatSession.participants.set(participantKey, autoParticipant);
+          participant = autoParticipant;
+          console.log(`✅ Auto-rejoined participant: ${participant.username}`);
+        } else {
+          socket.emit("chat-error", {
+            message: "Participant not found. Please rejoin the chat.",
+          });
+          return;
+        }
       }
 
       console.log(
@@ -320,6 +378,20 @@ export default class RealtimeChatService {
         mentions: data.mentions || [],
         edited: false,
       };
+
+      // If this is a reply, find the parent message and add replyTo info
+      if (data.parentMessageId) {
+        const parentMessage = chatSession.messages.find(
+          (m) => m.id === data.parentMessageId
+        );
+        if (parentMessage) {
+          message.replyTo = {
+            messageId: parentMessage.id,
+            content: parentMessage.content,
+            username: parentMessage.username,
+          };
+        }
+      }
 
       // Add to session messages
       chatSession.messages.push(message);

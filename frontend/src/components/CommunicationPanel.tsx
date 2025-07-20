@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import ChatComponent from "./ChatComponent";
 import { MessageSquare, X } from "lucide-react";
@@ -6,18 +6,42 @@ import { MessageSquare, X } from "lucide-react";
 interface CommunicationPanelProps {
   projectId?: string;
   className?: string;
+  isExpanded?: boolean;
+  onToggleCollapse?: (expanded: boolean) => void;
 }
 
 const CommunicationPanel: React.FC<CommunicationPanelProps> = ({
   projectId,
   className = "",
+  isExpanded = true,
+  onToggleCollapse,
 }) => {
   const { user } = useAuth();
-  const [isExpanded, setIsExpanded] = useState(true);
   const [isChatCollapsed, setIsChatCollapsed] = useState(false);
 
   // Use project-specific session or general session
   const sessionId = projectId || "general";
+
+  // Handle collapse
+  const handleToggleExpand = (expanded: boolean) => {
+    onToggleCollapse?.(expanded);
+  };
+
+  // Simulate new message indicator (you can connect this to actual message events)
+  useEffect(() => {
+    if (!isExpanded) {
+      // You can add logic here to detect new messages and set hasNewMessages to true
+      // For now, we'll just simulate it occasionally
+      const interval = setInterval(() => {
+        if (Math.random() > 0.8) {
+          // setHasNewMessages(true); // Removed for now
+        }
+      }, 5000);
+      return () => clearInterval(interval);
+    } else {
+      // setHasNewMessages(false); // Removed for now
+    }
+  }, [isExpanded]);
 
   if (!user) {
     return (
@@ -34,24 +58,12 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({
   }
 
   if (!isExpanded) {
-    return (
-      <div className={`bg-white border-l border-gray-200 ${className}`}>
-        <div className="p-2 flex flex-col space-y-2">
-          <button
-            onClick={() => setIsExpanded(true)}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded flex items-center justify-center"
-            title="Open Communication Panel"
-          >
-            <MessageSquare className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-    );
+    return null; // Return null so component takes no space in layout
   }
 
   return (
     <div
-      className={`bg-white border-l border-gray-200 flex flex-col ${className}`}
+      className={`bg-white border-l border-gray-200 flex flex-col transition-all duration-300 ${className}`}
     >
       {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -59,9 +71,9 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({
           <h2 className="text-lg font-semibold text-gray-900">Communication</h2>
           <div className="flex items-center space-x-1">
             <button
-              onClick={() => setIsExpanded(false)}
-              className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
-              title="Collapse Panel"
+              onClick={() => handleToggleExpand(false)}
+              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors duration-200"
+              title="Collapse Chat"
             >
               <X className="h-4 w-4" />
             </button>
@@ -71,7 +83,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({
         {/* Chat Only Label */}
         <div className="flex items-center space-x-2">
           <MessageSquare className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-medium text-blue-600">Chat</span>
+          <span className="text-sm font-medium text-blue-600">Team Chat</span>
         </div>
 
         {/* Session Info */}

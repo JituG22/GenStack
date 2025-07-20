@@ -15,6 +15,8 @@ import {
   Code,
   Users,
   Hash,
+  Reply,
+  X,
 } from "lucide-react";
 
 interface ChatComponentProps {
@@ -43,10 +45,12 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messageRefs = useRef<{ [key: string]: HTMLDivElement }>({});
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = useCallback(() => {
@@ -233,10 +237,12 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         sessionId,
         newMessage.trim(),
         messageType,
-        activeThread || undefined
+        activeThread || undefined,
+        replyingTo?.id
       );
       setNewMessage("");
       setMessageType("text");
+      setReplyingTo(null); // Clear reply state
 
       if (isTyping) {
         setIsTyping(false);
@@ -264,6 +270,33 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
       await communicationService.addReaction(messageId, emoji);
     } catch (err) {
       console.error("Failed to add reaction:", err);
+    }
+  };
+
+  // Handle reply to message
+  const handleReplyToMessage = (message: ChatMessage) => {
+    setReplyingTo(message);
+    messageInputRef.current?.focus();
+  };
+
+  // Cancel reply
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+  };
+
+  // Scroll to specific message
+  const scrollToMessage = (messageId: string) => {
+    const messageElement = messageRefs.current[messageId];
+    if (messageElement) {
+      messageElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      // Highlight the message briefly
+      messageElement.classList.add("bg-yellow-100");
+      setTimeout(() => {
+        messageElement.classList.remove("bg-yellow-100");
+      }, 2000);
     }
   };
 
@@ -428,21 +461,32 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
             index === 0 ||
             filteredMessages[index - 1].userId !== message.userId;
 
+          // Find replied-to message if this is a reply
+          const repliedToMessage = message.parentMessageId
+            ? messages.find((m) => m.id === message.parentMessageId)
+            : null;
+
           return (
             <div
               key={message.id}
-              className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+              ref={(el) => {
+                if (el) messageRefs.current[message.id] = el;
+              }}
+              className={`flex ${
+                isOwn ? "justify-end" : "justify-start"
+              } transition-colors duration-300`}
             >
               <div
                 className={`max-w-xs lg:max-w-md ${
                   isOwn ? "order-1" : "order-2"
-                }`}
+                } group relative`}
               >
                 {showAvatar && !isOwn && (
                   <div className="text-xs text-gray-500 mb-1">
                     {message.username}
                   </div>
                 )}
+
                 <div
                   className={`px-3 py-2 rounded-lg ${
                     isOwn
@@ -450,6 +494,35 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
                       : "bg-gray-100 text-gray-900"
                   }`}
                 >
+                  {/* Show replied-to message if this is a reply */}
+                  {repliedToMessage && (
+                    <div
+                      onClick={() => scrollToMessage(repliedToMessage.id)}
+                      className={`mb-2 p-2 rounded border-l-2 cursor-pointer transition-colors ${
+                        isOwn
+                          ? "bg-blue-400 border-blue-200 hover:bg-blue-300"
+                          : "bg-gray-200 border-gray-400 hover:bg-gray-300"
+                      }`}
+                    >
+                      <div
+                        className={`text-xs font-medium ${
+                          isOwn ? "text-blue-100" : "text-gray-600"
+                        }`}
+                      >
+                        Reply to {repliedToMessage.username}
+                      </div>
+                      <div
+                        className={`text-xs truncate ${
+                          isOwn ? "text-blue-100" : "text-gray-700"
+                        }`}
+                      >
+                        {repliedToMessage.content.length > 50
+                          ? `${repliedToMessage.content.substring(0, 50)}...`
+                          : repliedToMessage.content}
+                      </div>
+                    </div>
+                  )}
+
                   {message.type === "code" ? (
                     <pre
                       className={`text-xs font-mono whitespace-pre-wrap ${
@@ -485,6 +558,26 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
                       </div>
                     )}
                 </div>
+
+                {/* Message actions - Reply button */}
+                <div
+                  className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 ${
+                    isOwn ? "text-right" : "text-left"
+                  }`}
+                >
+                  <button
+                    onClick={() => handleReplyToMessage(message)}
+                    className={`inline-flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
+                      isOwn
+                        ? "text-blue-300 hover:text-white hover:bg-blue-400"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    <Reply className="h-3 w-3" />
+                    <span>Reply</span>
+                  </button>
+                </div>
+
                 <div
                   className={`text-xs text-gray-500 mt-1 ${
                     isOwn ? "text-right" : "text-left"
@@ -526,6 +619,30 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
 
       {/* Message input */}
       <div className="p-4 border-t border-gray-200 bg-gray-50">
+        {/* Reply preview */}
+        {replyingTo && (
+          <div className="mb-3 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="text-sm font-medium text-blue-900 mb-1">
+                  Replying to {replyingTo.username}
+                </div>
+                <div className="text-sm text-blue-700 truncate">
+                  {replyingTo.content.length > 100
+                    ? `${replyingTo.content.substring(0, 100)}...`
+                    : replyingTo.content}
+                </div>
+              </div>
+              <button
+                onClick={handleCancelReply}
+                className="ml-2 p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-end space-x-2">
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-2">

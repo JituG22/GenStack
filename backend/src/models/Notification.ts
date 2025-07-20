@@ -114,7 +114,6 @@ const NotificationSchema = new Schema<INotification>(
     },
     expiresAt: {
       type: Date,
-      index: true,
     },
 
     // Source

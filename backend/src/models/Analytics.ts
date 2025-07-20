@@ -145,7 +145,6 @@ const AnalyticsEventSchema = new Schema<IAnalyticsEventDocument>(
     sessionId: {
       type: String,
       required: [true, "Session ID is required"],
-      index: true,
     },
     timestamp: {
       type: Date,
@@ -314,7 +313,6 @@ const UserBehaviorSchema = new Schema<IUserBehaviorDocument>(
     sessionId: {
       type: String,
       required: [true, "Session ID is required"],
-      index: true,
     },
     pageViews: [
       {
