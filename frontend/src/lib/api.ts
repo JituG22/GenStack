@@ -406,7 +406,7 @@ export const githubProjectsApi = {
 // Enhanced GitHub Projects API
 export const enhancedGitHubProjectsApi = {
   async getHealthWithAccounts(): Promise<ApiResponse<any>> {
-    return fetchApi<ApiResponse<any>>("/enhanced-projects/github/health");
+    return fetchApi<ApiResponse<any>>("/projects-github/health");
   },
 
   async getAvailableAccounts(): Promise<ApiResponse<any>> {
@@ -422,17 +422,14 @@ export const enhancedGitHubProjectsApi = {
       isPrivate: boolean;
     }
   ): Promise<ApiResponse<any>> {
-    return fetchApi<ApiResponse<any>>(
-      `/enhanced-projects/${projectId}/github`,
-      {
-        method: "PUT",
-        body: JSON.stringify(githubConfig),
-      }
-    );
+    return fetchApi<ApiResponse<any>>(`/projects-github/${projectId}/github`, {
+      method: "PUT",
+      body: JSON.stringify(githubConfig),
+    });
   },
 
   async createProjectWithGitHub(projectData: any): Promise<ApiResponse<any>> {
-    return fetchApi<ApiResponse<any>>("/enhanced-projects", {
+    return fetchApi<ApiResponse<any>>("/projects-github", {
       method: "POST",
       body: JSON.stringify(projectData),
     });

@@ -7,7 +7,6 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { enhancedGitHubProjectsApi } from "../lib/api";
-import { enhancedGitHubProjectsService } from "../services/enhancedGitHubProjectsService";
 
 interface GitHubAccount {
   id: string;
@@ -64,18 +63,37 @@ export const GitHubIntegrationSetup: React.FC<GitHubIntegrationSetupProps> = ({
   const loadAccounts = async () => {
     try {
       setLoading(true);
-      const response =
-        await enhancedGitHubProjectsService.getAvailableAccounts();
-      setAccounts(response);
+      const response = await enhancedGitHubProjectsApi.getAvailableAccounts();
+      const accountsData = response.data || [];
+      setAccounts(accountsData);
+
+      if (accountsData.length === 0) {
+        setError(
+          "No GitHub accounts found. Please configure a GitHub account first."
+        );
+        return;
+      }
 
       // Auto-select default account if available
-      const defaultAccount = response.find((acc) => acc.isDefault);
+      const defaultAccount = accountsData.find(
+        (acc: GitHubAccount) => acc.isDefault
+      );
       if (defaultAccount) {
         setSelectedAccountId(defaultAccount.id);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading GitHub accounts:", error);
-      setError("Failed to load GitHub accounts. Please try again.");
+
+      if (
+        error.status === 404 ||
+        (error.message && error.message.includes("404"))
+      ) {
+        setError(
+          "No GitHub accounts found. Please configure a GitHub account first."
+        );
+      } else {
+        setError("Failed to load GitHub accounts. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
