@@ -6,8 +6,6 @@ import {
   ClockIcon,
   TrashIcon,
   CogIcon,
-  GlobeAltIcon,
-  CalendarIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { GitHubAccount } from "../types";
@@ -27,6 +25,7 @@ export const GitHubAccountCard: React.FC<GitHubAccountCardProps> = ({
   onDelete,
 }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const isActive = account.isActive && account.validationStatus === "valid";
 
   const getStatusDisplay = (status: string) => {
     return gitHubAccountsService.getValidationStatusDisplay(status);
@@ -48,18 +47,15 @@ export const GitHubAccountCard: React.FC<GitHubAccountCardProps> = ({
     return new Date(dateString).toLocaleDateString();
   };
 
-  const formatDateTime = (dateString?: string) => {
-    if (!dateString) return "Never";
-    return new Date(dateString).toLocaleString();
-  };
-
   const statusDisplay = getStatusDisplay(account.validationStatus);
   const permissions = getPermissionsDisplay();
 
   return (
     <div
       className={`bg-white rounded-lg shadow-md border-2 transition-all duration-200 ${
-        isDefault
+        isActive
+          ? "border-emerald-400 ring-2 ring-emerald-100 bg-gradient-to-r from-emerald-50 to-white"
+          : isDefault
           ? "border-yellow-300 ring-2 ring-yellow-100"
           : "border-gray-200 hover:border-gray-300"
       }`}
@@ -74,10 +70,24 @@ export const GitHubAccountCard: React.FC<GitHubAccountCardProps> = ({
                 <img
                   src={account.avatarUrl}
                   alt={account.nickname}
-                  className="h-12 w-12 rounded-full border-2 border-gray-200"
+                  className={`h-12 w-12 rounded-full border-2 ${
+                    isActive
+                      ? "border-emerald-400 ring-2 ring-emerald-200"
+                      : isDefault
+                      ? "border-yellow-400 ring-2 ring-yellow-200"
+                      : "border-gray-200"
+                  }`}
                 />
               ) : (
-                <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
+                <div
+                  className={`h-12 w-12 rounded-full flex items-center justify-center ${
+                    isActive
+                      ? "bg-emerald-300 border-2 border-emerald-400 ring-2 ring-emerald-200"
+                      : isDefault
+                      ? "bg-yellow-300 border-2 border-yellow-400 ring-2 ring-yellow-200"
+                      : "bg-gray-300"
+                  }`}
+                >
                   <span className="text-gray-600 font-medium text-lg">
                     {account.nickname.charAt(0).toUpperCase()}
                   </span>
@@ -91,6 +101,12 @@ export const GitHubAccountCard: React.FC<GitHubAccountCardProps> = ({
                 <h3 className="text-lg font-semibold text-gray-900 truncate">
                   {account.nickname}
                 </h3>
+                {isActive && (
+                  <div className="flex items-center space-x-1 bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs font-medium">
+                    <div className="h-2 w-2 bg-emerald-600 rounded-full animate-pulse"></div>
+                    <span>Active</span>
+                  </div>
+                )}
                 {isDefault && (
                   <div className="flex items-center space-x-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
                     <StarIconSolid className="h-3 w-3" />
@@ -108,8 +124,45 @@ export const GitHubAccountCard: React.FC<GitHubAccountCardProps> = ({
                     )}
                 </p>
                 {account.email && (
-                  <p className="text-sm text-gray-500">{account.email}</p>
+                  <p className="text-sm text-gray-500 flex items-center">
+                    <svg
+                      className="h-3 w-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                      />
+                    </svg>
+                    {account.email}
+                  </p>
                 )}
+                <div className="flex items-center space-x-3 text-xs text-gray-500">
+                  <span className="flex items-center">
+                    <svg
+                      className="h-3 w-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                    ID: {account.githubId}
+                  </span>
+                  <span className="flex items-center">
+                    <ClockIcon className="h-3 w-3 mr-1" />
+                    Last API: {formatDate(account.stats.lastApiCall)}
+                  </span>
+                </div>
               </div>
 
               {/* Status */}
@@ -169,15 +222,15 @@ export const GitHubAccountCard: React.FC<GitHubAccountCardProps> = ({
         </div>
 
         {/* Quick Stats */}
-        <div className="mt-4 grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+        <div className="mt-4 grid grid-cols-4 gap-3 pt-4 border-t border-gray-200">
           <div className="text-center">
-            <p className="text-2xl font-semibold text-gray-900">
+            <p className="text-lg font-semibold text-gray-900">
               {account.stats.repositoriesCreated}
             </p>
-            <p className="text-xs text-gray-500">Repositories Created</p>
+            <p className="text-xs text-gray-500">Repos Created</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-semibold text-gray-900">
+            <p className="text-lg font-semibold text-gray-900">
               {account.stats.totalApiCalls}
             </p>
             <p className="text-xs text-gray-500">API Calls</p>
@@ -188,6 +241,12 @@ export const GitHubAccountCard: React.FC<GitHubAccountCardProps> = ({
             </p>
             <p className="text-xs text-gray-500">Last Used</p>
           </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-900">
+              {account.scopes.length}
+            </p>
+            <p className="text-xs text-gray-500">Permissions</p>
+          </div>
         </div>
       </div>
 
@@ -195,6 +254,40 @@ export const GitHubAccountCard: React.FC<GitHubAccountCardProps> = ({
       {showDetails && (
         <div className="px-6 pb-6 border-t border-gray-200">
           <div className="pt-4 space-y-4">
+            {/* Active Status */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">
+                Account Status
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                <div
+                  className={`flex items-center text-xs px-2 py-1 rounded ${
+                    isActive
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {isActive ? (
+                    <>
+                      <div className="h-2 w-2 bg-emerald-600 rounded-full animate-pulse mr-1"></div>
+                      Active
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-2 w-2 bg-gray-400 rounded-full mr-1"></div>
+                      Inactive
+                    </>
+                  )}
+                </div>
+                {isDefault && (
+                  <div className="flex items-center text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
+                    <StarIconSolid className="h-3 w-3 mr-1" />
+                    Default
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Permissions */}
             <div>
               <h4 className="text-sm font-medium text-gray-900 mb-2">
@@ -262,31 +355,135 @@ export const GitHubAccountCard: React.FC<GitHubAccountCardProps> = ({
               </div>
             </div>
 
-            {/* Timestamps */}
+            {/* Account Information */}
             <div>
               <h4 className="text-sm font-medium text-gray-900 mb-2">
-                Account Information
+                GitHub Account Details
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-600">
-                <div className="flex items-center">
-                  <CalendarIcon className="h-3 w-3 mr-2" />
-                  <span>Created: {formatDate(account.createdAt)}</span>
+              <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">GitHub Username:</span>
+                    <span className="font-medium text-gray-900">
+                      @{account.githubLogin}
+                    </span>
+                  </div>
+                  {account.githubName && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Display Name:</span>
+                      <span className="font-medium text-gray-900">
+                        {account.githubName}
+                      </span>
+                    </div>
+                  )}
+                  {account.email && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Email:</span>
+                      <span
+                        className="font-medium text-gray-900 truncate"
+                        title={account.email}
+                      >
+                        {account.email}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Account Type:</span>
+                    <span
+                      className={`font-medium px-2 py-1 rounded-full text-xs ${
+                        account.githubType === "Organization"
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}
+                    >
+                      {account.githubType}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">GitHub ID:</span>
+                    <span className="font-medium text-gray-900">
+                      {account.githubId}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Profile URL:</span>
+                    <a
+                      href={`https://github.com/${account.githubLogin}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-indigo-600 hover:text-indigo-800 truncate"
+                    >
+                      github.com/{account.githubLogin}
+                    </a>
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <CalendarIcon className="h-3 w-3 mr-2" />
-                  <span>
-                    Last Validated: {formatDateTime(account.lastValidatedAt)}
+              </div>
+            </div>
+
+            {/* API Usage Stats */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">
+                Usage Statistics
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-50 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-blue-600">
+                    {account.stats.repositoriesCreated}
+                  </p>
+                  <p className="text-xs text-blue-700">Repositories Created</p>
+                  {account.stats.lastRepositoryCreated && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Last: {formatDate(account.stats.lastRepositoryCreated)}
+                    </p>
+                  )}
+                </div>
+                <div className="bg-green-50 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-green-600">
+                    {account.stats.totalApiCalls}
+                  </p>
+                  <p className="text-xs text-green-700">Total API Calls</p>
+                  {account.stats.lastApiCall && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Last: {formatDate(account.stats.lastApiCall)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Account Timestamps */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">
+                Account Timeline
+              </h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center">
+                    <ClockIcon className="h-4 w-4 mr-2" />
+                    Account Added:
+                  </span>
+                  <span className="font-medium">
+                    {formatDate(account.createdAt)}
                   </span>
                 </div>
-                <div className="flex items-center">
-                  <GlobeAltIcon className="h-3 w-3 mr-2" />
-                  <span>GitHub ID: {account.githubId}</span>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center">
+                    <CheckCircleIcon className="h-4 w-4 mr-2" />
+                    Last Validated:
+                  </span>
+                  <span className="font-medium">
+                    {account.lastValidatedAt
+                      ? new Date(account.lastValidatedAt).toLocaleString()
+                      : "Never"}
+                  </span>
                 </div>
-                <div className="flex items-center">
-                  <ClockIcon className="h-3 w-3 mr-2" />
-                  <span>
-                    Last Repository:{" "}
-                    {formatDate(account.stats.lastRepositoryCreated)}
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center">
+                    <ClockIcon className="h-4 w-4 mr-2" />
+                    Last Used:
+                  </span>
+                  <span className="font-medium">
+                    {formatDate(account.lastUsedAt)}
                   </span>
                 </div>
               </div>

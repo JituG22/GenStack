@@ -88,9 +88,6 @@ export class GitHubAccountService {
     organizationId: string,
     data: CreateGitHubAccountRequest
   ): Promise<IGitHubAccount> {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
       // Validate the token first
       const validation = await this.validateGitHubToken(data.token);
@@ -140,9 +137,7 @@ export class GitHubAccountService {
       };
 
       const newAccount = new GitHubAccount(accountData);
-      await newAccount.save({ session });
-
-      await session.commitTransaction();
+      await newAccount.save();
 
       // Return account without sensitive data
       const savedAccount = await GitHubAccount.findById(newAccount._id).select(
@@ -151,10 +146,7 @@ export class GitHubAccountService {
 
       return savedAccount!;
     } catch (error) {
-      await session.abortTransaction();
       throw error;
-    } finally {
-      session.endSession();
     }
   }
 
@@ -202,15 +194,12 @@ export class GitHubAccountService {
     userId: string,
     data: UpdateGitHubAccountRequest
   ): Promise<IGitHubAccount> {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
       const account = await GitHubAccount.findOne({
         _id: accountId,
         userId,
         isActive: true,
-      }).session(session);
+      });
 
       if (!account) {
         throw new Error("GitHub account not found");
@@ -232,19 +221,14 @@ export class GitHubAccountService {
       }
 
       account.updatedAt = new Date();
-      await account.save({ session });
-
-      await session.commitTransaction();
+      await account.save();
 
       // Return updated account without sensitive data
       return GitHubAccount.findById(accountId).select(
         "-token -refreshToken"
       ) as any;
     } catch (error) {
-      await session.abortTransaction();
       throw error;
-    } finally {
-      session.endSession();
     }
   }
 
@@ -252,15 +236,12 @@ export class GitHubAccountService {
    * Delete a GitHub account
    */
   async deleteGitHubAccount(accountId: string, userId: string): Promise<void> {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
       const account = await GitHubAccount.findOne({
         _id: accountId,
         userId,
         isActive: true,
-      }).session(session);
+      });
 
       if (!account) {
         throw new Error("GitHub account not found");
@@ -270,7 +251,7 @@ export class GitHubAccountService {
       const activeAccounts = await GitHubAccount.countDocuments({
         userId,
         isActive: true,
-      }).session(session);
+      });
 
       if (activeAccounts === 1) {
         throw new Error(
@@ -284,11 +265,11 @@ export class GitHubAccountService {
           userId,
           isActive: true,
           _id: { $ne: accountId },
-        }).session(session);
+        });
 
         if (nextAccount) {
           nextAccount.isDefault = true;
-          await nextAccount.save({ session });
+          await nextAccount.save();
         }
       }
 
@@ -296,14 +277,9 @@ export class GitHubAccountService {
       account.isActive = false;
       account.isDefault = false;
       account.updatedAt = new Date();
-      await account.save({ session });
-
-      await session.commitTransaction();
+      await account.save();
     } catch (error) {
-      await session.abortTransaction();
       throw error;
-    } finally {
-      session.endSession();
     }
   }
 

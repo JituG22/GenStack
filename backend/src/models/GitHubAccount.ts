@@ -264,31 +264,20 @@ GitHubAccountSchema.statics.setDefault = async function (
   accountId: string,
   userId: string
 ) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     // Unset all defaults for the user
-    await this.updateMany(
-      { userId },
-      { $set: { isDefault: false } },
-      { session }
-    );
+    await this.updateMany({ userId }, { $set: { isDefault: false } });
 
     // Set the new default
     const updatedAccount = await this.findByIdAndUpdate(
       accountId,
       { $set: { isDefault: true, lastUsedAt: new Date() } },
-      { new: true, session }
+      { new: true }
     );
 
-    await session.commitTransaction();
     return updatedAccount;
   } catch (error) {
-    await session.abortTransaction();
     throw error;
-  } finally {
-    session.endSession();
   }
 };
 

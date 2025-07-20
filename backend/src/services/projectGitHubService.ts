@@ -18,9 +18,6 @@ export class ProjectGitHubService {
    * Create a new project with GitHub synchronization
    */
   async createProjectWithGitHub(data: any) {
-    const session = await Project.startSession();
-    session.startTransaction();
-
     let githubRepoData: any = null;
 
     try {
@@ -82,17 +79,14 @@ export class ProjectGitHubService {
 
       // Create project in MongoDB
       const project = new Project(projectData);
-      await project.save({ session });
+      await project.save();
 
-      await session.commitTransaction();
       console.log(`Project created successfully: ${project.id}`);
 
       return await Project.findById(project.id)
         .populate("createdBy", "firstName lastName email")
         .populate("collaborators", "firstName lastName email");
     } catch (error) {
-      await session.abortTransaction();
-
       // If we created a GitHub repo but project creation failed, clean up
       if (githubRepoData && data.github?.enabled) {
         try {
@@ -108,8 +102,6 @@ export class ProjectGitHubService {
       }
 
       throw error;
-    } finally {
-      session.endSession();
     }
   }
 

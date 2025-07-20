@@ -95,6 +95,9 @@ export const GitHubConfigPage: React.FC = () => {
     (acc) => acc.validationStatus === "valid"
   );
   const defaultAccount = accounts.find((acc) => acc.isDefault);
+  const activeAccount = accounts.find(
+    (acc) => acc.isActive && acc.validationStatus === "valid"
+  );
 
   if (loading) {
     return (
@@ -160,7 +163,7 @@ export const GitHubConfigPage: React.FC = () => {
           </div>
 
           {/* Status Overview */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -188,6 +191,24 @@ export const GitHubConfigPage: React.FC = () => {
                   </p>
                   <p className="text-2xl font-semibold text-gray-900">
                     {validAccounts.length}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="h-8 w-8 bg-emerald-600 rounded-full flex items-center justify-center">
+                    <div className="h-4 w-4 bg-white rounded-full animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">
+                    Active Account
+                  </p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {activeAccount ? activeAccount.nickname : "None"}
                   </p>
                 </div>
               </div>
@@ -264,8 +285,29 @@ export const GitHubConfigPage: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Active Account Section */}
+            {activeAccount && (
+              <div className="mb-8">
+                <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                  <div className="h-5 w-5 bg-emerald-600 rounded-full flex items-center justify-center mr-2">
+                    <div className="h-2 w-2 bg-white rounded-full animate-pulse"></div>
+                  </div>
+                  Active Account
+                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                    Currently Active
+                  </span>
+                </h2>
+                <GitHubAccountCard
+                  account={activeAccount}
+                  isDefault={activeAccount.isDefault}
+                  onSetDefault={handleSetDefault}
+                  onDelete={handleDeleteAccount}
+                />
+              </div>
+            )}
+
             {/* Default Account Section */}
-            {defaultAccount && (
+            {defaultAccount && !activeAccount?.isDefault && (
               <div className="mb-8">
                 <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                   <StarIcon className="h-5 w-5 text-yellow-500 mr-2" />
@@ -281,15 +323,30 @@ export const GitHubConfigPage: React.FC = () => {
             )}
 
             {/* Other Accounts Section */}
-            {accounts.filter((acc) => !acc.isDefault).length > 0 && (
+            {accounts.filter(
+              (acc) =>
+                !acc.isDefault &&
+                (!activeAccount || acc.id !== activeAccount.id)
+            ).length > 0 && (
               <div>
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
                   Other Accounts (
-                  {accounts.filter((acc) => !acc.isDefault).length})
+                  {
+                    accounts.filter(
+                      (acc) =>
+                        !acc.isDefault &&
+                        (!activeAccount || acc.id !== activeAccount.id)
+                    ).length
+                  }
+                  )
                 </h2>
                 <div className="space-y-4">
                   {accounts
-                    .filter((acc) => !acc.isDefault)
+                    .filter(
+                      (acc) =>
+                        !acc.isDefault &&
+                        (!activeAccount || acc.id !== activeAccount.id)
+                    )
                     .map((account) => (
                       <GitHubAccountCard
                         key={account.id}
