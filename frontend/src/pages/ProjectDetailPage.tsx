@@ -6,6 +6,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import GitHubIntegrationSetup from "../components/GitHubIntegrationSetup";
 
 interface Project {
   id: string;
@@ -30,22 +31,26 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchProject = async () => {
     if (!id) return;
+    try {
+      setLoading(true);
+      const response = await projectsApi.getProject(id);
+      setProject(response.data);
+    } catch (err: any) {
+      console.error("Error fetching project:", err);
+      setError(err.message || "Failed to fetch project");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchProject = async () => {
-      try {
-        setLoading(true);
-        const response = await projectsApi.getProject(id);
-        setProject(response.data);
-      } catch (err: any) {
-        console.error("Error fetching project:", err);
-        setError(err.message || "Failed to fetch project");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleIntegrationUpdated = () => {
+    // Refresh project data when GitHub integration is updated
+    fetchProject();
+  };
 
+  useEffect(() => {
     fetchProject();
   }, [id]);
 
@@ -232,6 +237,16 @@ export default function ProjectDetailPage() {
             )}
           </dl>
         </div>
+      </div>
+
+      {/* GitHub Integration Setup */}
+      <div className="mt-6">
+        <GitHubIntegrationSetup
+          projectId={project.id}
+          projectName={project.name}
+          currentGitHubConfig={project.github}
+          onIntegrationUpdated={handleIntegrationUpdated}
+        />
       </div>
     </div>
   );

@@ -403,4 +403,40 @@ export const githubProjectsApi = {
   },
 };
 
+// Enhanced GitHub Projects API
+export const enhancedGitHubProjectsApi = {
+  async getHealthWithAccounts(): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>("/enhanced-projects/github/health");
+  },
+
+  async getAvailableAccounts(): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>("/github-accounts");
+  },
+
+  async updateProjectGitHub(
+    projectId: string,
+    githubConfig: {
+      accountId: string;
+      repositoryName: string;
+      autoSync: boolean;
+      isPrivate: boolean;
+    }
+  ): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>(
+      `/enhanced-projects/${projectId}/github`,
+      {
+        method: "PUT",
+        body: JSON.stringify(githubConfig),
+      }
+    );
+  },
+
+  async createProjectWithGitHub(projectData: any): Promise<ApiResponse<any>> {
+    return fetchApi<ApiResponse<any>>("/enhanced-projects", {
+      method: "POST",
+      body: JSON.stringify(projectData),
+    });
+  },
+};
+
 export { ApiError };
