@@ -53,6 +53,14 @@ const WebRTCComponent: React.FC<WebRTCComponentProps> = ({
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [connectionQuality, setConnectionQuality] = useState<
+    "excellent" | "good" | "poor" | "unknown"
+  >("unknown");
+  const [videoStats, setVideoStats] = useState<{
+    resolution: string;
+    frameRate: number;
+    bandwidth: string;
+  } | null>(null);
   const [isInCall, setIsInCall] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -101,6 +109,57 @@ const WebRTCComponent: React.FC<WebRTCComponentProps> = ({
 
     initializeWebRTC();
   }, []);
+
+  // Monitor video stream quality
+  useEffect(() => {
+    if (localStream && isInCall) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        const settings = videoTrack.getSettings();
+        setVideoStats({
+          resolution: `${settings.width}x${settings.height}`,
+          frameRate: settings.frameRate || 30,
+          bandwidth: "Calculating...",
+        });
+
+        // Monitor connection quality (simplified)
+        const qualityInterval = setInterval(() => {
+          if (videoTrack.readyState === "live") {
+            setConnectionQuality("excellent");
+          } else {
+            setConnectionQuality("poor");
+          }
+        }, 2000);
+
+        return () => clearInterval(qualityInterval);
+      }
+    }
+  }, [localStream, isInCall]);
+
+  // Handle local stream assignment to video element
+  useEffect(() => {
+    console.log("🎥 Stream assignment effect triggered:", {
+      hasLocalStream: !!localStream,
+      hasVideoRef: !!localVideoRef.current,
+      isInCall: isInCall,
+      hasVideoTracks: localStream?.getVideoTracks().length || 0,
+    });
+
+    if (localStream && localVideoRef.current && isInCall) {
+      console.log("🎥 Assigning stream to video element via useEffect");
+      localVideoRef.current.srcObject = localStream;
+
+      // Try to play the video
+      localVideoRef.current
+        .play()
+        .then(() => {
+          console.log("🎥 Video started playing via useEffect");
+        })
+        .catch((playError) => {
+          console.warn("🎥 Video play failed via useEffect:", playError);
+        });
+    }
+  }, [localStream, isInCall]);
 
   // Set up WebRTC event listeners
   useEffect(() => {
@@ -444,7 +503,14 @@ const WebRTCComponent: React.FC<WebRTCComponentProps> = ({
 
       if (localVideoRef.current && stream.getVideoTracks().length > 0) {
         console.log("🎥 Setting local video stream");
+        console.log("🎥 Video ref exists:", !!localVideoRef.current);
+        console.log(
+          "🎥 Video tracks available:",
+          stream.getVideoTracks().length
+        );
+
         localVideoRef.current.srcObject = stream;
+        console.log("🎥 Stream assigned to video element");
 
         // Enhanced video element setup
         localVideoRef.current.onloadedmetadata = () => {
@@ -484,6 +550,13 @@ const WebRTCComponent: React.FC<WebRTCComponentProps> = ({
             }
           }, 1000);
         }
+      } else {
+        console.warn("🎥 Stream assignment skipped:", {
+          videoRefExists: !!localVideoRef.current,
+          hasVideoTracks: stream.getVideoTracks().length > 0,
+          videoTracksCount: stream.getVideoTracks().length,
+          streamId: stream.id,
+        });
       }
 
       return stream;
@@ -569,41 +642,91 @@ const WebRTCComponent: React.FC<WebRTCComponentProps> = ({
   const joinRoom = async (room: WebRTCRoom) => {
     try {
       setError(null);
-      console.log("🚀 Joining room:", room.id);
+      console.log("🚀 [VERBOSE] Starting joinRoom for:", room.id);
+      console.log("🚀 [VERBOSE] Current settings:", {
+        isAudioEnabled,
+        isVideoEnabled,
+      });
+      console.log("🚀 [VERBOSE] Current user ID:", currentUserId);
 
       // Check media capabilities first
+      console.log("🚀 [VERBOSE] Checking media capabilities...");
       const capabilitiesOk = await checkMediaCapabilities();
+      console.log("🚀 [VERBOSE] Media capabilities result:", capabilitiesOk);
       if (!capabilitiesOk) {
+        console.error(
+          "🚀 [VERBOSE] Media capabilities check failed, aborting joinRoom"
+        );
         return;
       }
 
       // Get user media with retries
+      console.log("🚀 [VERBOSE] Starting getUserMedia with retries...");
       let stream: MediaStream | null = null;
       let retryCount = 0;
       const maxRetries = 3;
 
       while (!stream && retryCount < maxRetries) {
         try {
+          console.log(
+            `🚀 [VERBOSE] getUserMedia attempt ${retryCount + 1}/${maxRetries}`
+          );
+          console.log("🚀 [VERBOSE] Calling getUserMedia with:", {
+            audio: isAudioEnabled,
+            video: isVideoEnabled,
+          });
           stream = await getUserMedia(isAudioEnabled, isVideoEnabled);
+          console.log("🚀 [VERBOSE] getUserMedia success! Stream details:", {
+            id: stream?.id,
+            active: stream?.active,
+            videoTracks: stream?.getVideoTracks().length,
+            audioTracks: stream?.getAudioTracks().length,
+          });
           break;
         } catch (err) {
           retryCount++;
-          console.warn(`🔄 getUserMedia attempt ${retryCount} failed:`, err);
+          console.warn(
+            `🔄 [VERBOSE] getUserMedia attempt ${retryCount} failed:`,
+            err
+          );
+          console.warn("🔄 [VERBOSE] Error type:", typeof err);
+          console.warn("🔄 [VERBOSE] Error name:", (err as any)?.name);
+          console.warn("🔄 [VERBOSE] Error message:", (err as any)?.message);
 
           if (retryCount >= maxRetries) {
+            console.error(
+              "🚀 [VERBOSE] All getUserMedia attempts failed, throwing error"
+            );
             throw err;
           }
 
           // Wait before retry
+          console.log("🚀 [VERBOSE] Waiting 1s before retry...");
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
 
       if (!stream) {
+        console.error("🚀 [VERBOSE] No stream obtained after all retries");
         throw new Error("Failed to get media stream after retries");
       }
 
-      console.log("✅ Successfully got media stream, joining WebRTC room...");
+      console.log(
+        "✅ [VERBOSE] Successfully got media stream, joining WebRTC room..."
+      );
+      console.log("✅ [VERBOSE] Final stream verification:", {
+        hasStream: !!stream,
+        streamId: stream.id,
+        streamActive: stream.active,
+        tracks: {
+          video: stream
+            .getVideoTracks()
+            .map((t) => ({ id: t.id, label: t.label, enabled: t.enabled })),
+          audio: stream
+            .getAudioTracks()
+            .map((t) => ({ id: t.id, label: t.label, enabled: t.enabled })),
+        },
+      });
 
       await communicationService.joinWebRTCRoom(room.id, {
         audio: isAudioEnabled,
@@ -834,6 +957,28 @@ const WebRTCComponent: React.FC<WebRTCComponentProps> = ({
               <span className="text-xs text-gray-500">
                 {peers.length} participant{peers.length !== 1 ? "s" : ""}
               </span>
+              {connectionQuality !== "unknown" && (
+                <div
+                  className={`flex items-center space-x-1 px-2 py-1 rounded text-xs ${
+                    connectionQuality === "excellent"
+                      ? "bg-green-100 text-green-700"
+                      : connectionQuality === "good"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      connectionQuality === "excellent"
+                        ? "bg-green-500"
+                        : connectionQuality === "good"
+                        ? "bg-yellow-500"
+                        : "bg-red-500"
+                    }`}
+                  />
+                  <span className="capitalize">{connectionQuality}</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center space-x-1">
@@ -863,9 +1008,9 @@ const WebRTCComponent: React.FC<WebRTCComponentProps> = ({
           <div className="h-full flex flex-col">
             {/* Video grid */}
             <div className="flex-1 bg-gray-900 relative">
-              {/* Local video with enhanced error handling */}
-              {localStream && (
-                <div className="absolute top-4 right-4 w-32 h-24 bg-black rounded-lg overflow-hidden z-10">
+              {/* Local video with enhanced error handling - Always render container */}
+              <div className="absolute top-4 right-4 w-32 h-24 bg-black rounded-lg overflow-hidden z-10">
+                {isInCall && (
                   <video
                     ref={localVideoRef}
                     autoPlay
@@ -890,16 +1035,21 @@ const WebRTCComponent: React.FC<WebRTCComponentProps> = ({
                       }
                     }}
                   />
-                  <div className="absolute bottom-1 left-1 text-xs text-white bg-black bg-opacity-50 px-1 rounded">
-                    You {!isVideoEnabled && "(Video Off)"}
-                  </div>
-                  {!isVideoEnabled && (
-                    <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-                      <VideoOff className="h-8 w-8 text-gray-400" />
+                )}
+                <div className="absolute bottom-1 left-1 text-xs text-white bg-black bg-opacity-50 px-1 rounded">
+                  You {!isVideoEnabled && "(Video Off)"}
+                  {videoStats && (
+                    <div className="text-xs opacity-75">
+                      {videoStats.resolution} • {videoStats.frameRate}fps
                     </div>
                   )}
                 </div>
-              )}
+                {!isVideoEnabled && (
+                  <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
+                    <VideoOff className="h-8 w-8 text-gray-400" />
+                  </div>
+                )}
+              </div>
 
               {/* Remote videos */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 h-full">
@@ -1162,11 +1312,28 @@ const WebRTCComponent: React.FC<WebRTCComponentProps> = ({
                         console.log("Peer Connections:", peerConnections);
                         console.log("Active Room:", activeRoom);
                         console.log("Peers:", peers);
+                        console.log("Video Stats:", videoStats);
+                        console.log("Connection Quality:", connectionQuality);
                         console.log("========================");
                       }}
-                      className="px-2 py-1 bg-gray-500 text-white rounded text-xs"
+                      className="px-2 py-1 bg-gray-500 text-white rounded text-xs mr-2"
                     >
                       Log to Console
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Run comprehensive test
+                        if ((window as any).webrtcTester) {
+                          (window as any).webrtcTester.runAllTests();
+                        } else {
+                          console.log(
+                            "💡 Load the test suite first by running the webrtc-test-suite.js script"
+                          );
+                        }
+                      }}
+                      className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                    >
+                      Run Tests
                     </button>
                   </div>
                 </div>
