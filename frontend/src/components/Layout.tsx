@@ -45,7 +45,7 @@ const navigation = [
 
 export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isChatExpanded, setIsChatExpanded] = useState(true);
+  const [isChatExpanded, setIsChatExpanded] = useState(false);
   const { user, logout, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
