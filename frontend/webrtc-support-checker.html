@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebRTC Support Checker</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 15px;
+        background: #f8f9fa;
+        margin: 0;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .critical {
+        background: #f8d7da;
+        border: 2px solid #dc3545;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      .success {
+        background: #d4edda;
+        border: 2px solid #28a745;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      .warning {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      .info {
+        background: #d1ecf1;
+        border: 2px solid #17a2b8;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      .code {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 12px;
+        margin: 10px 0;
+        overflow-x: auto;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+        width: 100%;
+      }
+      .btn-danger {
+        background: #dc3545;
+      }
+      .btn-success {
+        background: #28a745;
+      }
+      .btn-warning {
+        background: #ffc107;
+        color: #212529;
+      }
+      .test-result {
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+      }
+      .fail {
+        background: #f8d7da;
+        border-color: #dc3545;
+      }
+      .pass {
+        background: #d4edda;
+        border-color: #28a745;
+      }
+      .log {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 11px;
+        max-height: 200px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔍 WebRTC Support Checker</h1>
+
+      <div id="criticalIssue" class="critical" style="display: none">
+        <h3>🚨 CRITICAL: WebRTC Not Available</h3>
+        <p>
+          Your browser doesn't support WebRTC or it's blocked. See solutions
+          below.
+        </p>
+      </div>
+
+      <div id="results"></div>
+
+      <button onclick="runCompleteCheck()">🔍 Check WebRTC Support</button>
+      <button onclick="tryHTTPSUpgrade()" class="btn-warning">
+        🔒 Try HTTPS Version
+      </button>
+      <button onclick="showManualFixes()" class="btn-danger">
+        🛠️ Show Manual Fixes
+      </button>
+
+      <div class="log" id="log"></div>
+
+      <div id="manualFixes" style="display: none">
+        <h2>🛠️ Manual Fixes</h2>
+
+        <div class="critical">
+          <h3>🔒 HTTPS Issue (Most Common)</h3>
+          <p>
+            <strong>Problem:</strong> Most mobile browsers require HTTPS for
+            WebRTC
+          </p>
+          <p><strong>Current URL:</strong> <span id="currentUrl"></span></p>
+          <p>
+            <strong>Solution:</strong> Try accessing via HTTPS or use a tunnel
+            service
+          </p>
+          <div class="code">
+            # Option 1: Use ngrok to create HTTPS tunnel ngrok http 3002 #
+            Option 2: Use localtunnel npx localtunnel --port 3002 # Option 3:
+            Use Vite's HTTPS mode npm run dev -- --https
+          </div>
+        </div>
+
+        <div class="warning">
+          <h3>📱 Mobile Browser Issues</h3>
+          <h4>iOS Safari:</h4>
+          <ul>
+            <li>Requires iOS 11+ for WebRTC</li>
+            <li>Go to Settings → Safari → Camera & Microphone → Allow</li>
+            <li>Disable "Request Desktop Site"</li>
+            <li>Try reloading the page</li>
+          </ul>
+
+          <h4>Android Chrome:</h4>
+          <ul>
+            <li>Update Chrome to latest version</li>
+            <li>Go to Settings → Site Settings → Camera/Microphone → Allow</li>
+            <li>Clear Chrome cache and data</li>
+            <li>Disable battery optimization for Chrome</li>
+          </ul>
+
+          <h4>Other Browsers:</h4>
+          <ul>
+            <li>Try switching to Chrome or Safari</li>
+            <li>Exit private/incognito mode</li>
+            <li>Update browser to latest version</li>
+          </ul>
+        </div>
+
+        <div class="info">
+          <h3>🔧 Alternative Testing Methods</h3>
+          <p>If WebRTC still doesn't work, try these test URLs:</p>
+          <div class="code">
+            # Test basic WebRTC support: https://webrtc.github.io/samples/ #
+            Test camera access: https://webcamtests.com/ # Mozilla WebRTC test:
+            https://mozilla.github.io/webrtc-landing/
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logElement = document.getElementById("log");
+        logElement.textContent += `[${timestamp}] ${message}\n`;
+        logElement.scrollTop = logElement.scrollHeight;
+        console.log(message);
+      }
+
+      function addResult(test, passed, details = "") {
+        const container = document.getElementById("results");
+        const div = document.createElement("div");
+        div.className = `test-result ${passed ? "pass" : "fail"}`;
+        div.innerHTML = `
+                <strong>${passed ? "✅" : "❌"} ${test}</strong>
+                ${details ? `<br><small>${details}</small>` : ""}
+            `;
+        container.appendChild(div);
+      }
+
+      function runCompleteCheck() {
+        document.getElementById("results").innerHTML =
+          "<h3>🧪 Test Results:</h3>";
+        log("🔍 Starting WebRTC support check...");
+
+        // Check 1: Basic WebRTC API availability
+        log("Checking WebRTC API availability...");
+
+        if (typeof navigator === "undefined") {
+          addResult("Navigator Object", false, "Navigator not available");
+          log("❌ Navigator object not available");
+          return;
+        }
+        addResult("Navigator Object", true);
+        log("✅ Navigator object available");
+
+        // Check 2: getUserMedia support (legacy and modern)
+        const hasGetUserMedia = !!(
+          navigator.getUserMedia ||
+          navigator.webkitGetUserMedia ||
+          navigator.mozGetUserMedia ||
+          navigator.msGetUserMedia
+        );
+
+        addResult(
+          "Legacy getUserMedia",
+          hasGetUserMedia,
+          hasGetUserMedia ? "Legacy API available" : "Legacy API not supported"
+        );
+
+        // Check 3: Modern MediaDevices API
+        if (typeof navigator.mediaDevices === "undefined") {
+          addResult(
+            "MediaDevices API",
+            false,
+            "navigator.mediaDevices is undefined"
+          );
+          log("❌ navigator.mediaDevices is undefined");
+          document.getElementById("criticalIssue").style.display = "block";
+        } else {
+          addResult(
+            "MediaDevices API",
+            true,
+            "navigator.mediaDevices available"
+          );
+          log("✅ navigator.mediaDevices available");
+
+          // Check getUserMedia method
+          if (typeof navigator.mediaDevices.getUserMedia === "undefined") {
+            addResult(
+              "getUserMedia Method",
+              false,
+              "getUserMedia method not available"
+            );
+            log("❌ getUserMedia method not available");
+          } else {
+            addResult(
+              "getUserMedia Method",
+              true,
+              "getUserMedia method available"
+            );
+            log("✅ getUserMedia method available");
+          }
+
+          // Check enumerateDevices
+          if (typeof navigator.mediaDevices.enumerateDevices === "undefined") {
+            addResult(
+              "Device Enumeration",
+              false,
+              "enumerateDevices not available"
+            );
+            log("❌ enumerateDevices not available");
+          } else {
+            addResult("Device Enumeration", true, "enumerateDevices available");
+            log("✅ enumerateDevices available");
+          }
+        }
+
+        // Check 4: Secure context
+        const isSecureContext = window.isSecureContext;
+        const isLocalhost =
+          location.hostname === "localhost" ||
+          location.hostname === "127.0.0.1" ||
+          location.hostname.startsWith("192.168.");
+        const isHTTPS = location.protocol === "https:";
+
+        addResult(
+          "Secure Context",
+          isSecureContext,
+          `Protocol: ${location.protocol}, isSecureContext: ${isSecureContext}`
+        );
+
+        if (!isSecureContext && !isLocalhost) {
+          log("⚠️ WARNING: Not in secure context - WebRTC may be blocked");
+          log(`Current URL: ${location.href}`);
+          log("💡 TIP: Try HTTPS or localhost for WebRTC access");
+        }
+
+        // Check 5: Browser and version
+        const userAgent = navigator.userAgent;
+        const isMobile =
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            userAgent
+          );
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+        const isAndroid = /Android/.test(userAgent);
+        const isChrome = /Chrome/.test(userAgent) && !/Edge/.test(userAgent);
+        const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+
+        addResult(
+          "Mobile Device",
+          isMobile,
+          `${isMobile ? "Mobile" : "Desktop"} device detected`
+        );
+
+        if (isIOS) {
+          const iosVersion = userAgent.match(/OS (\d+)_(\d+)/);
+          const majorVersion = iosVersion ? parseInt(iosVersion[1]) : 0;
+          addResult(
+            "iOS WebRTC Support",
+            majorVersion >= 11,
+            `iOS ${
+              majorVersion >= 11 ? "supports" : "may not support"
+            } WebRTC (detected v${majorVersion})`
+          );
+        }
+
+        // Check 6: Try basic permission check
+        if (navigator.permissions) {
+          log("🔑 Checking permissions...");
+          navigator.permissions
+            .query({ name: "camera" })
+            .then((result) => {
+              addResult(
+                "Camera Permission API",
+                true,
+                `Permission state: ${result.state}`
+              );
+              log(`📷 Camera permission: ${result.state}`);
+            })
+            .catch((e) => {
+              addResult(
+                "Camera Permission API",
+                false,
+                `Permission check failed: ${e.message}`
+              );
+              log(`❌ Camera permission check failed: ${e.message}`);
+            });
+        } else {
+          addResult("Permissions API", false, "Permissions API not supported");
+          log("⚠️ Permissions API not supported");
+        }
+
+        log("🏁 WebRTC support check complete");
+
+        // Show critical issue if WebRTC not supported
+        if (typeof navigator.mediaDevices === "undefined") {
+          document.getElementById("criticalIssue").style.display = "block";
+        }
+      }
+
+      function tryHTTPSUpgrade() {
+        const currentUrl = window.location.href;
+        const httpsUrl = currentUrl.replace("http://", "https://");
+
+        if (currentUrl === httpsUrl) {
+          alert("Already using HTTPS or localhost");
+          return;
+        }
+
+        log(`🔒 Attempting HTTPS upgrade: ${httpsUrl}`);
+
+        // Try to open HTTPS version
+        const newWindow = window.open(httpsUrl, "_blank");
+        if (!newWindow) {
+          alert(
+            `Could not open HTTPS version automatically. Please try manually:\n${httpsUrl}`
+          );
+        }
+      }
+
+      function showManualFixes() {
+        document.getElementById("manualFixes").style.display = "block";
+        document.getElementById("currentUrl").textContent =
+          window.location.href;
+      }
+
+      // Auto-run check on load
+      window.addEventListener("load", () => {
+        log("🚀 WebRTC Support Checker loaded");
+        setTimeout(runCompleteCheck, 500);
+      });
+
+      // Show current environment info
+      log(`🌐 Current URL: ${window.location.href}`);
+      log(`📱 User Agent: ${navigator.userAgent.substring(0, 100)}...`);
+      log(`🔒 Secure Context: ${window.isSecureContext}`);
+    </script>
+  </body>
+</html>

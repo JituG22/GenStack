@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mobile Video Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 400px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      video {
+        width: 100%;
+        height: 200px;
+        background: #000;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+      button {
+        width: 100%;
+        padding: 15px;
+        margin: 5px 0;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .primary {
+        background: #007bff;
+        color: white;
+      }
+      .success {
+        background: #28a745;
+        color: white;
+      }
+      .danger {
+        background: #dc3545;
+        color: white;
+      }
+      .info {
+        background: #17a2b8;
+        color: white;
+      }
+      .log {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        text-align: center;
+      }
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .status.warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>📱 Mobile Video Test</h2>
+      <p>Test basic video functionality on your mobile device</p>
+
+      <div id="status" class="status warning">Ready to test</div>
+
+      <video id="localVideo" autoplay muted playsinline></video>
+
+      <button class="primary" onclick="testBasicVideo()">
+        🎥 Test Basic Video
+      </button>
+      <button class="info" onclick="testMobileConstraints()">
+        📱 Test Mobile Constraints
+      </button>
+      <button class="success" onclick="testPermissions()">
+        🔑 Test Permissions
+      </button>
+      <button class="danger" onclick="stopVideo()">⏹️ Stop Video</button>
+
+      <div class="log" id="log"></div>
+    </div>
+
+    <script>
+      let currentStream = null;
+
+      function log(message) {
+        const logElement = document.getElementById("log");
+        const timestamp = new Date().toLocaleTimeString();
+        logElement.innerHTML += `[${timestamp}] ${message}\n`;
+        logElement.scrollTop = logElement.scrollHeight;
+        console.log(message);
+      }
+
+      function setStatus(message, type = "warning") {
+        const statusElement = document.getElementById("status");
+        statusElement.textContent = message;
+        statusElement.className = `status ${type}`;
+      }
+
+      function stopVideo() {
+        if (currentStream) {
+          currentStream.getTracks().forEach((track) => track.stop());
+          currentStream = null;
+          document.getElementById("localVideo").srcObject = null;
+          setStatus("Video stopped", "warning");
+          log("✅ Video stream stopped");
+        }
+      }
+
+      async function testBasicVideo() {
+        try {
+          log("🎥 Testing basic video access...");
+          setStatus("Testing basic video...", "warning");
+
+          stopVideo(); // Stop any existing stream
+
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          });
+
+          currentStream = stream;
+          const video = document.getElementById("localVideo");
+          video.srcObject = stream;
+
+          log(
+            `✅ Basic video success! Video tracks: ${
+              stream.getVideoTracks().length
+            }, Audio tracks: ${stream.getAudioTracks().length}`
+          );
+          setStatus("Basic video working!", "success");
+
+          // Log track details
+          stream.getTracks().forEach((track) => {
+            log(
+              `📊 Track: ${track.kind} - ${track.label} - ${track.readyState}`
+            );
+          });
+        } catch (error) {
+          log(`❌ Basic video failed: ${error.name} - ${error.message}`);
+          setStatus(`Video failed: ${error.name}`, "error");
+        }
+      }
+
+      async function testMobileConstraints() {
+        try {
+          log("📱 Testing mobile-optimized constraints...");
+          setStatus("Testing mobile constraints...", "warning");
+
+          stopVideo();
+
+          const constraints = {
+            video: {
+              width: { ideal: 320, max: 480 },
+              height: { ideal: 240, max: 360 },
+              frameRate: { ideal: 15, max: 30 },
+              facingMode: "user",
+            },
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+            },
+          };
+
+          log(`📋 Using constraints: ${JSON.stringify(constraints, null, 2)}`);
+
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          currentStream = stream;
+
+          const video = document.getElementById("localVideo");
+          video.srcObject = stream;
+
+          // Get actual settings
+          const videoTrack = stream.getVideoTracks()[0];
+          if (videoTrack) {
+            const settings = videoTrack.getSettings();
+            log(
+              `📊 Actual video settings: ${JSON.stringify(settings, null, 2)}`
+            );
+          }
+
+          log("✅ Mobile constraints successful!");
+          setStatus("Mobile video working!", "success");
+        } catch (error) {
+          log(`❌ Mobile constraints failed: ${error.name} - ${error.message}`);
+          setStatus(`Mobile test failed: ${error.name}`, "error");
+
+          // Try fallback
+          try {
+            log("🔄 Trying fallback constraints...");
+            const fallbackStream = await navigator.mediaDevices.getUserMedia({
+              video: { width: 320, height: 240 },
+              audio: true,
+            });
+
+            currentStream = fallbackStream;
+            document.getElementById("localVideo").srcObject = fallbackStream;
+            log("✅ Fallback successful!");
+            setStatus("Fallback video working!", "success");
+          } catch (fallbackError) {
+            log(
+              `❌ Fallback also failed: ${fallbackError.name} - ${fallbackError.message}`
+            );
+          }
+        }
+      }
+
+      async function testPermissions() {
+        try {
+          log("🔑 Testing permissions...");
+          setStatus("Checking permissions...", "warning");
+
+          // Device info
+          log(`📱 User Agent: ${navigator.userAgent}`);
+          log(
+            `📱 Is Mobile: ${/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+              navigator.userAgent
+            )}`
+          );
+
+          // Check getUserMedia support
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            log("❌ getUserMedia not supported");
+            setStatus("getUserMedia not supported", "error");
+            return;
+          }
+          log("✅ getUserMedia is supported");
+
+          // Check permissions API
+          if ("permissions" in navigator) {
+            try {
+              const cameraPermission = await navigator.permissions.query({
+                name: "camera",
+              });
+              const microphonePermission = await navigator.permissions.query({
+                name: "microphone",
+              });
+              log(`📷 Camera permission: ${cameraPermission.state}`);
+              log(`🎤 Microphone permission: ${microphonePermission.state}`);
+            } catch (e) {
+              log("⚠️ Permissions API not fully supported");
+            }
+          } else {
+            log("⚠️ Permissions API not available");
+          }
+
+          // Test device enumeration
+          try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(
+              (device) => device.kind === "videoinput"
+            );
+            const audioDevices = devices.filter(
+              (device) => device.kind === "audioinput"
+            );
+
+            log(`📷 Video devices found: ${videoDevices.length}`);
+            log(`🎤 Audio devices found: ${audioDevices.length}`);
+
+            videoDevices.forEach((device, index) => {
+              log(`📷 Video ${index + 1}: ${device.label || "Unknown camera"}`);
+            });
+          } catch (e) {
+            log(`⚠️ Device enumeration failed: ${e.message}`);
+          }
+
+          setStatus("Permission check complete", "success");
+        } catch (error) {
+          log(`❌ Permission test failed: ${error.message}`);
+          setStatus("Permission test failed", "error");
+        }
+      }
+
+      // Initialize
+      log("📱 Mobile Video Test Loaded");
+      log("🔧 Click buttons above to test different video scenarios");
+
+      // Auto-detect mobile and show tip
+      if (
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        )
+      ) {
+        log("📱 Mobile device detected - using mobile-optimized tests");
+        setStatus("Mobile device detected", "success");
+      } else {
+        log("💻 Desktop device detected");
+      }
+    </script>
+  </body>
+</html>

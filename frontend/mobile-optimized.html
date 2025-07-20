@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Mobile Video Test - Optimized</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f8f9fa;
+        color: #333;
+        line-height: 1.4;
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      .container {
+        max-width: 375px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 16px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .header p {
+        font-size: 12px;
+        opacity: 0.9;
+      }
+
+      .content {
+        padding: 16px;
+      }
+
+      .video-container {
+        position: relative;
+        width: 100%;
+        background: #000;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+
+      video {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+
+      .video-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        text-align: center;
+        font-size: 12px;
+        opacity: 0.7;
+        pointer-events: none;
+      }
+
+      .button-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .btn {
+        padding: 12px 8px;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+        color: white;
+      }
+
+      .btn-info {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: white;
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .status-card {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .status-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .status-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .status-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      .status-warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .info-item {
+        background: #f8f9fa;
+        padding: 8px;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 11px;
+      }
+
+      .info-label {
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 2px;
+      }
+
+      .info-value {
+        font-family: "SF Mono", Monaco, monospace;
+        color: #333;
+        word-break: break-all;
+      }
+
+      .log-container {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px;
+        max-height: 120px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+      }
+
+      .log-title {
+        font-weight: 600;
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 8px;
+      }
+
+      .log-entry {
+        font-family: "SF Mono", Monaco, monospace;
+        font-size: 10px;
+        color: #495057;
+        margin-bottom: 4px;
+        word-wrap: break-word;
+        line-height: 1.3;
+      }
+
+      .pulse {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #007bff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 6px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Mobile-specific optimizations */
+      @media (max-width: 375px) {
+        .container {
+          border-radius: 0;
+          margin: 0;
+          min-height: 100vh;
+        }
+
+        .content {
+          padding: 12px;
+        }
+
+        video {
+          height: 180px;
+        }
+      }
+
+      /* Touch improvements */
+      @media (hover: none) and (pointer: coarse) {
+        .btn {
+          padding: 14px 8px;
+          font-size: 14px;
+        }
+
+        .btn:active {
+          background-color: rgba(0, 0, 0, 0.1);
+          transform: scale(0.95);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📱 Mobile Video Test</h1>
+        <p>Optimized for mobile devices</p>
+      </div>
+
+      <div class="content">
+        <div id="status" class="status-card status-info">
+          <span class="spinner"></span>Initializing...
+        </div>
+
+        <div class="video-container">
+          <video id="localVideo" autoplay muted playsinline></video>
+          <div class="video-overlay" id="videoOverlay">
+            📹 Tap "Start Video" to begin
+          </div>
+        </div>
+
+        <div class="button-grid">
+          <button class="btn btn-primary" onclick="startVideo()">
+            🎥 Start Video
+          </button>
+          <button class="btn btn-success" onclick="testPermissions()">
+            🔑 Check Permissions
+          </button>
+          <button class="btn btn-info" onclick="switchCamera()">
+            🔄 Switch Camera
+          </button>
+          <button class="btn btn-danger" onclick="stopVideo()">
+            🛑 Stop Video
+          </button>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Protocol</div>
+            <div class="info-value" id="protocol">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Device</div>
+            <div class="info-value" id="deviceType">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Browser</div>
+            <div class="info-value" id="browser">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Secure</div>
+            <div class="info-value" id="secure">-</div>
+          </div>
+        </div>
+
+        <div class="log-container">
+          <div class="log-title">📋 Test Log</div>
+          <div id="log"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentStream = null;
+      let facingMode = "user";
+      let logs = [];
+
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logMessage = `[${timestamp}] ${message}`;
+        logs.push(logMessage);
+
+        // Keep only last 10 logs for performance
+        if (logs.length > 10) {
+          logs = logs.slice(-10);
+        }
+
+        updateLogDisplay();
+        console.log(logMessage);
+      }
+
+      function updateLogDisplay() {
+        const logContainer = document.getElementById("log");
+        logContainer.innerHTML = logs
+          .map((log) => `<div class="log-entry">${log}</div>`)
+          .join("");
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
+
+      function setStatus(message, type = "info") {
+        const statusElement = document.getElementById("status");
+        statusElement.className = `status-card status-${type}`;
+        statusElement.innerHTML = message;
+      }
+
+      function updateDeviceInfo() {
+        document.getElementById("protocol").textContent = location.protocol;
+        document.getElementById("secure").textContent = window.isSecureContext
+          ? "✅"
+          : "❌";
+
+        const isMobile =
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          );
+        document.getElementById("deviceType").textContent = isMobile
+          ? "📱 Mobile"
+          : "💻 Desktop";
+
+        let browser = "Unknown";
+        if (navigator.userAgent.includes("Chrome")) browser = "Chrome";
+        else if (navigator.userAgent.includes("Safari")) browser = "Safari";
+        else if (navigator.userAgent.includes("Firefox")) browser = "Firefox";
+        else if (navigator.userAgent.includes("Edge")) browser = "Edge";
+
+        document.getElementById("browser").textContent = browser;
+      }
+
+      async function startVideo() {
+        try {
+          setStatus('<span class="spinner"></span>Starting camera...', "info");
+          log("🎥 Starting mobile-optimized video...");
+
+          stopVideo();
+
+          const constraints = {
+            video: {
+              width: { ideal: 320, max: 640 },
+              height: { ideal: 240, max: 480 },
+              frameRate: { ideal: 15, max: 30 },
+              facingMode: facingMode,
+            },
+            audio: true,
+          };
+
+          log(
+            `📋 Using constraints: facingMode=${facingMode}, resolution=320x240`
+          );
+
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          currentStream = stream;
+
+          const video = document.getElementById("localVideo");
+          video.srcObject = stream;
+
+          document.getElementById("videoOverlay").style.display = "none";
+
+          const videoTrack = stream.getVideoTracks()[0];
+          if (videoTrack) {
+            const settings = videoTrack.getSettings();
+            log(
+              `✅ Video started: ${settings.width}x${settings.height}@${settings.frameRate}fps`
+            );
+            setStatus(
+              `✅ Video active: ${settings.width}x${settings.height}`,
+              "success"
+            );
+          } else {
+            log("✅ Audio-only stream started");
+            setStatus("✅ Audio stream active", "success");
+          }
+        } catch (error) {
+          log(`❌ Video failed: ${error.name} - ${error.message}`);
+          setStatus(`❌ Error: ${error.name}`, "error");
+          document.getElementById("videoOverlay").style.display = "block";
+
+          // Try fallback
+          try {
+            log("🔄 Trying fallback...");
+            const fallbackStream = await navigator.mediaDevices.getUserMedia({
+              video: { width: 320, height: 240 },
+              audio: false,
+            });
+
+            currentStream = fallbackStream;
+            document.getElementById("localVideo").srcObject = fallbackStream;
+            document.getElementById("videoOverlay").style.display = "none";
+
+            log("✅ Fallback successful");
+            setStatus("✅ Fallback video active", "warning");
+          } catch (fallbackError) {
+            log(`❌ Fallback failed: ${fallbackError.name}`);
+            setStatus("❌ Camera not available", "error");
+          }
+        }
+      }
+
+      async function testPermissions() {
+        try {
+          setStatus(
+            '<span class="spinner"></span>Checking permissions...',
+            "info"
+          );
+          log("🔑 Testing permissions...");
+
+          // Check basic support
+          if (!navigator.mediaDevices?.getUserMedia) {
+            log("❌ getUserMedia not supported");
+            setStatus("❌ WebRTC not supported", "error");
+            return;
+          }
+          log("✅ getUserMedia supported");
+
+          // Check devices
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = devices.filter((d) => d.kind === "videoinput");
+          const audioDevices = devices.filter((d) => d.kind === "audioinput");
+
+          log(`📷 Found ${videoDevices.length} camera(s)`);
+          log(`🎤 Found ${audioDevices.length} microphone(s)`);
+
+          if (videoDevices.length === 0) {
+            setStatus("⚠️ No cameras found", "warning");
+          } else {
+            setStatus(
+              `✅ ${videoDevices.length} camera(s) available`,
+              "success"
+            );
+          }
+
+          // Check permissions API
+          if ("permissions" in navigator) {
+            try {
+              const cameraPermission = await navigator.permissions.query({
+                name: "camera",
+              });
+              const micPermission = await navigator.permissions.query({
+                name: "microphone",
+              });
+              log(`📷 Camera permission: ${cameraPermission.state}`);
+              log(`🎤 Microphone permission: ${micPermission.state}`);
+            } catch (e) {
+              log("⚠️ Permissions API limited");
+            }
+          }
+        } catch (error) {
+          log(`❌ Permission check failed: ${error.message}`);
+          setStatus("❌ Permission check failed", "error");
+        }
+      }
+
+      function switchCamera() {
+        facingMode = facingMode === "user" ? "environment" : "user";
+        log(
+          `🔄 Switching to ${facingMode === "user" ? "front" : "back"} camera`
+        );
+
+        if (currentStream) {
+          startVideo();
+        } else {
+          setStatus(
+            `📷 Camera set to ${facingMode === "user" ? "front" : "back"}`,
+            "info"
+          );
+        }
+      }
+
+      function stopVideo() {
+        if (currentStream) {
+          currentStream.getTracks().forEach((track) => track.stop());
+          currentStream = null;
+          document.getElementById("localVideo").srcObject = null;
+          document.getElementById("videoOverlay").style.display = "block";
+          log("🛑 Video stopped");
+          setStatus("📹 Video stopped", "info");
+        }
+      }
+
+      // Initialize
+      window.addEventListener("load", () => {
+        log("📱 Mobile Video Test loaded");
+        updateDeviceInfo();
+
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setStatus("❌ WebRTC not supported on this browser", "error");
+          log("❌ WebRTC not supported");
+        } else if (!window.isSecureContext) {
+          setStatus("⚠️ Requires HTTPS for camera access", "warning");
+          log("⚠️ Not in secure context");
+        } else {
+          setStatus("✅ Ready to test video", "success");
+          log("✅ Environment ready");
+        }
+      });
+
+      // Handle page visibility
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && currentStream) {
+          log("📱 Page hidden, keeping video active");
+        }
+      });
+
+      // Prevent zoom on double tap
+      let lastTouchEnd = 0;
+      document.addEventListener(
+        "touchend",
+        function (event) {
+          const now = new Date().getTime();
+          if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+          }
+          lastTouchEnd = now;
+        },
+        false
+      );
+    </script>
+  </body>
+</html>

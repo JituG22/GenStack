@@ -84,7 +84,7 @@ class CommunicationService {
         return;
       }
 
-      this.chatSocket = io("http://localhost:5000/chat", {
+      this.chatSocket = io("/chat", {
         auth: { token },
         transports: ["websocket"],
       });
@@ -111,7 +111,7 @@ class CommunicationService {
         return;
       }
 
-      this.webrtcSocket = io("http://localhost:5000/webrtc", {
+      this.webrtcSocket = io("/webrtc", {
         auth: { token },
         transports: ["websocket"],
       });
@@ -529,7 +529,7 @@ class CommunicationService {
     before?: string
   ): Promise<ChatMessage[]> {
     const response = await fetch(
-      `http://localhost:5000/api/communication/chat/sessions/${sessionId}/messages?${new URLSearchParams(
+      `/api/communication/chat/sessions/${sessionId}/messages?${new URLSearchParams(
         {
           ...(limit && { limit: limit.toString() }),
           ...(before && { before }),
@@ -553,7 +553,7 @@ class CommunicationService {
 
   async getChatThreads(sessionId: string): Promise<ChatThread[]> {
     const response = await fetch(
-      `http://localhost:5000/api/communication/chat/sessions/${sessionId}/threads`,
+      `/api/communication/chat/sessions/${sessionId}/threads`,
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -571,15 +571,12 @@ class CommunicationService {
   }
 
   async getWebRTCRooms(): Promise<WebRTCRoom[]> {
-    const response = await fetch(
-      "http://localhost:5000/api/communication/webrtc/rooms",
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch("/api/communication/webrtc/rooms", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch WebRTC rooms: ${response.statusText}`);
@@ -592,15 +589,12 @@ class CommunicationService {
   async getWebRTCRoomDetails(
     roomId: string
   ): Promise<{ room: WebRTCRoom; participants: WebRTCPeer[] }> {
-    const response = await fetch(
-      `http://localhost:5000/api/communication/webrtc/rooms/${roomId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch(`/api/communication/webrtc/rooms/${roomId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch room details: ${response.statusText}`);
@@ -614,17 +608,14 @@ class CommunicationService {
     name: string,
     settings: Partial<WebRTCRoom["settings"]> = {}
   ): Promise<WebRTCRoom> {
-    const response = await fetch(
-      "http://localhost:5000/api/communication/webrtc/rooms",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, settings }),
-      }
-    );
+    const response = await fetch("/api/communication/webrtc/rooms", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, settings }),
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to create WebRTC room: ${response.statusText}`);
@@ -635,15 +626,12 @@ class CommunicationService {
   }
 
   async getCommunicationStats(): Promise<any> {
-    const response = await fetch(
-      "http://localhost:5000/api/communication/stats",
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch("/api/communication/stats", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       throw new Error(

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enhanced Mobile Video Debug</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 10px;
+        background: #f5f5f5;
+        margin: 0;
+      }
+      .container {
+        max-width: 100%;
+        margin: 0 auto;
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      video {
+        width: 100%;
+        max-width: 320px;
+        height: 240px;
+        background: #000;
+        border-radius: 5px;
+        margin: 10px 0;
+        display: block;
+      }
+
+      button {
+        width: 100%;
+        padding: 12px;
+        margin: 5px 0;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+      .btn-warning {
+        background: #ffc107;
+        color: #212529;
+      }
+
+      .log {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+        max-height: 300px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+
+      .test-result {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        margin: 5px 0;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+      }
+
+      .test-icon {
+        font-size: 20px;
+        margin-right: 10px;
+        min-width: 30px;
+      }
+
+      .test-pass {
+        background: #d4edda;
+        border-color: #c3e6cb;
+      }
+      .test-fail {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+      }
+      .test-pending {
+        background: #fff3cd;
+        border-color: #ffeaa7;
+      }
+
+      .device-info {
+        background: #e9ecef;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-size: 12px;
+      }
+
+      .constraints-box {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 11px;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔍 Enhanced Mobile Video Debug</h1>
+
+      <div id="deviceInfo" class="device-info">
+        <strong>Device Information:</strong><br />
+        Loading device info...
+      </div>
+
+      <video id="localVideo" autoplay muted playsinline></video>
+
+      <div class="status" id="status">Ready to test</div>
+
+      <button class="btn-primary" onclick="runFullDiagnostic()">
+        🚀 Run Full Diagnostic
+      </button>
+      <button class="btn-warning" onclick="testMinimalVideo()">
+        📹 Test Minimal Video
+      </button>
+      <button class="btn-success" onclick="testWithDifferentConstraints()">
+        ⚙️ Test Different Constraints
+      </button>
+      <button class="btn-danger" onclick="clearAll()">🧹 Clear All</button>
+
+      <div id="testResults"></div>
+
+      <div class="log" id="log"></div>
+
+      <div
+        id="constraintsDisplay"
+        class="constraints-box"
+        style="display: none"
+      ></div>
+    </div>
+
+    <script>
+      let currentStream = null;
+      let testResults = {};
+
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logElement = document.getElementById("log");
+        logElement.textContent += `[${timestamp}] ${message}\n`;
+        logElement.scrollTop = logElement.scrollHeight;
+        console.log(message);
+      }
+
+      function setStatus(message, type = "info") {
+        const statusElement = document.getElementById("status");
+        statusElement.textContent = message;
+        statusElement.className = `status ${type}`;
+      }
+
+      function addTestResult(testName, passed, details = "") {
+        testResults[testName] = { passed, details };
+        updateTestResultsDisplay();
+      }
+
+      function updateTestResultsDisplay() {
+        const container = document.getElementById("testResults");
+        container.innerHTML = "<h3>🧪 Test Results:</h3>";
+
+        Object.entries(testResults).forEach(([testName, result]) => {
+          const div = document.createElement("div");
+          div.className = `test-result ${
+            result.passed ? "test-pass" : "test-fail"
+          }`;
+          div.innerHTML = `
+                    <span class="test-icon">${
+                      result.passed ? "✅" : "❌"
+                    }</span>
+                    <div>
+                        <strong>${testName}</strong>
+                        ${
+                          result.details
+                            ? `<br><small>${result.details}</small>`
+                            : ""
+                        }
+                    </div>
+                `;
+          container.appendChild(div);
+        });
+      }
+
+      function stopCurrentStream() {
+        if (currentStream) {
+          currentStream.getTracks().forEach((track) => track.stop());
+          currentStream = null;
+          document.getElementById("localVideo").srcObject = null;
+        }
+      }
+
+      function displayConstraints(constraints) {
+        const display = document.getElementById("constraintsDisplay");
+        display.innerHTML = `<strong>Constraints Used:</strong><br><pre>${JSON.stringify(
+          constraints,
+          null,
+          2
+        )}</pre>`;
+        display.style.display = "block";
+      }
+
+      async function checkBasicSupport() {
+        log("🔍 Checking basic WebRTC support...");
+
+        // Check getUserMedia support
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          addTestResult(
+            "getUserMedia Support",
+            false,
+            "navigator.mediaDevices.getUserMedia not available"
+          );
+          return false;
+        }
+
+        addTestResult(
+          "getUserMedia Support",
+          true,
+          "navigator.mediaDevices.getUserMedia available"
+        );
+
+        // Check secure context (HTTPS)
+        const isSecure =
+          location.protocol === "https:" ||
+          location.hostname === "localhost" ||
+          location.hostname === "127.0.0.1" ||
+          location.hostname.includes("192.168.");
+        addTestResult(
+          "Secure Context",
+          isSecure,
+          `Protocol: ${location.protocol}, Host: ${location.hostname}`
+        );
+
+        return true;
+      }
+
+      async function checkPermissions() {
+        log("🔑 Checking permissions...");
+
+        if ("permissions" in navigator) {
+          try {
+            const cameraResult = await navigator.permissions.query({
+              name: "camera",
+            });
+            const micResult = await navigator.permissions.query({
+              name: "microphone",
+            });
+
+            addTestResult(
+              "Camera Permission",
+              cameraResult.state !== "denied",
+              `State: ${cameraResult.state}`
+            );
+            addTestResult(
+              "Microphone Permission",
+              micResult.state !== "denied",
+              `State: ${micResult.state}`
+            );
+
+            log(`📷 Camera permission: ${cameraResult.state}`);
+            log(`🎤 Microphone permission: ${micResult.state}`);
+          } catch (e) {
+            addTestResult("Permission API", false, `Error: ${e.message}`);
+            log(`⚠️ Permission API error: ${e.message}`);
+          }
+        } else {
+          addTestResult(
+            "Permission API",
+            false,
+            "Permissions API not supported"
+          );
+          log("⚠️ Permissions API not supported");
+        }
+      }
+
+      async function checkDevices() {
+        log("📱 Checking available devices...");
+
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = devices.filter((d) => d.kind === "videoinput");
+          const audioDevices = devices.filter((d) => d.kind === "audioinput");
+
+          addTestResult(
+            "Video Devices",
+            videoDevices.length > 0,
+            `Found ${videoDevices.length} camera(s)`
+          );
+          addTestResult(
+            "Audio Devices",
+            audioDevices.length > 0,
+            `Found ${audioDevices.length} microphone(s)`
+          );
+
+          log(`📷 Found ${videoDevices.length} video devices`);
+          log(`🎤 Found ${audioDevices.length} audio devices`);
+
+          videoDevices.forEach((device, i) => {
+            log(
+              `📷 Camera ${i + 1}: ${
+                device.label || "Unknown camera"
+              } (${device.deviceId.substring(0, 8)}...)`
+            );
+          });
+        } catch (e) {
+          addTestResult("Device Enumeration", false, `Error: ${e.message}`);
+          log(`❌ Device enumeration failed: ${e.message}`);
+        }
+      }
+
+      async function testBasicVideo() {
+        log("🎥 Testing basic video access...");
+        setStatus("Testing basic video...", "warning");
+
+        stopCurrentStream();
+
+        const constraints = { video: true, audio: true };
+        displayConstraints(constraints);
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          currentStream = stream;
+
+          const video = document.getElementById("localVideo");
+          video.srcObject = stream;
+
+          const videoTracks = stream.getVideoTracks();
+          const audioTracks = stream.getAudioTracks();
+
+          addTestResult(
+            "Basic Video Access",
+            true,
+            `Video: ${videoTracks.length} tracks, Audio: ${audioTracks.length} tracks`
+          );
+
+          if (videoTracks.length > 0) {
+            const settings = videoTracks[0].getSettings();
+            log(
+              `📊 Video settings: ${settings.width}x${settings.height}@${settings.frameRate}fps`
+            );
+          }
+
+          setStatus("Basic video working!", "success");
+          return true;
+        } catch (error) {
+          addTestResult(
+            "Basic Video Access",
+            false,
+            `${error.name}: ${error.message}`
+          );
+          log(`❌ Basic video failed: ${error.name} - ${error.message}`);
+          setStatus(`Basic video failed: ${error.name}`, "error");
+          return false;
+        }
+      }
+
+      async function testMobileOptimized() {
+        log("📱 Testing mobile-optimized constraints...");
+        setStatus("Testing mobile constraints...", "warning");
+
+        stopCurrentStream();
+
+        const constraints = {
+          video: {
+            width: { ideal: 320, max: 640 },
+            height: { ideal: 240, max: 480 },
+            frameRate: { ideal: 15, max: 30 },
+            facingMode: "user",
+          },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        };
+
+        displayConstraints(constraints);
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          currentStream = stream;
+
+          const video = document.getElementById("localVideo");
+          video.srcObject = stream;
+
+          const videoTrack = stream.getVideoTracks()[0];
+          if (videoTrack) {
+            const settings = videoTrack.getSettings();
+            addTestResult(
+              "Mobile Optimized Video",
+              true,
+              `${settings.width}x${settings.height}@${settings.frameRate}fps`
+            );
+            log(
+              `📊 Mobile video settings: ${JSON.stringify(settings, null, 2)}`
+            );
+          } else {
+            addTestResult(
+              "Mobile Optimized Video",
+              false,
+              "No video track obtained"
+            );
+          }
+
+          setStatus("Mobile video working!", "success");
+          return true;
+        } catch (error) {
+          addTestResult(
+            "Mobile Optimized Video",
+            false,
+            `${error.name}: ${error.message}`
+          );
+          log(`❌ Mobile video failed: ${error.name} - ${error.message}`);
+          setStatus(`Mobile video failed: ${error.name}`, "error");
+          return false;
+        }
+      }
+
+      async function testMinimalVideo() {
+        log("🎯 Testing minimal video constraints...");
+        setStatus("Testing minimal video...", "warning");
+
+        stopCurrentStream();
+
+        const constraints = {
+          video: {
+            width: 320,
+            height: 240,
+          },
+        };
+
+        displayConstraints(constraints);
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          currentStream = stream;
+
+          const video = document.getElementById("localVideo");
+          video.srcObject = stream;
+
+          addTestResult("Minimal Video", true, "Minimal constraints worked");
+          setStatus("Minimal video working!", "success");
+        } catch (error) {
+          addTestResult(
+            "Minimal Video",
+            false,
+            `${error.name}: ${error.message}`
+          );
+          log(`❌ Minimal video failed: ${error.name} - ${error.message}`);
+          setStatus(`Minimal video failed: ${error.name}`, "error");
+        }
+      }
+
+      async function testWithDifferentConstraints() {
+        log("⚙️ Testing various constraint combinations...");
+
+        const constraintSets = [
+          { name: "Video Only", constraints: { video: true } },
+          { name: "Audio Only", constraints: { audio: true } },
+          {
+            name: "Low Resolution",
+            constraints: { video: { width: 160, height: 120 } },
+          },
+          {
+            name: "Back Camera",
+            constraints: { video: { facingMode: "environment" } },
+          },
+          {
+            name: "Front Camera",
+            constraints: { video: { facingMode: "user" } },
+          },
+        ];
+
+        for (const testSet of constraintSets) {
+          try {
+            stopCurrentStream();
+            log(`🧪 Testing: ${testSet.name}`);
+
+            const stream = await navigator.mediaDevices.getUserMedia(
+              testSet.constraints
+            );
+            currentStream = stream;
+
+            addTestResult(testSet.name, true, "Constraint set worked");
+
+            // Brief delay before next test
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          } catch (error) {
+            addTestResult(
+              testSet.name,
+              false,
+              `${error.name}: ${error.message}`
+            );
+            log(`❌ ${testSet.name} failed: ${error.name} - ${error.message}`);
+          }
+        }
+
+        setStatus("Constraint testing complete", "info");
+      }
+
+      async function runFullDiagnostic() {
+        log("🚀 Starting full diagnostic...");
+        testResults = {};
+        updateTestResultsDisplay();
+
+        setStatus("Running diagnostic...", "warning");
+
+        // Run all tests
+        await checkBasicSupport();
+        await checkPermissions();
+        await checkDevices();
+        await testBasicVideo();
+
+        if (testResults["Basic Video Access"]?.passed) {
+          await testMobileOptimized();
+        }
+
+        setStatus("Diagnostic complete", "success");
+        log("✅ Full diagnostic complete");
+      }
+
+      function clearAll() {
+        stopCurrentStream();
+        testResults = {};
+        document.getElementById("testResults").innerHTML = "";
+        document.getElementById("log").textContent = "";
+        document.getElementById("constraintsDisplay").style.display = "none";
+        setStatus("Cleared", "info");
+        loadDeviceInfo();
+      }
+
+      function loadDeviceInfo() {
+        const info = document.getElementById("deviceInfo");
+        const userAgent = navigator.userAgent;
+        const isMobile =
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            userAgent
+          );
+
+        info.innerHTML = `
+                <strong>Device Information:</strong><br>
+                📱 Mobile: ${isMobile ? "Yes" : "No"}<br>
+                🌐 Protocol: ${location.protocol}<br>
+                🏠 Host: ${location.hostname}<br>
+                📊 Screen: ${screen.width}x${screen.height}<br>
+                🔧 User Agent: ${userAgent.substring(0, 100)}...
+            `;
+      }
+
+      // Initialize
+      window.addEventListener("load", () => {
+        log("🔍 Enhanced Mobile Video Debug loaded");
+        loadDeviceInfo();
+
+        // Auto-start basic checks
+        setTimeout(checkBasicSupport, 1000);
+      });
+
+      // Handle errors
+      window.addEventListener("error", (e) => {
+        log(`💥 JavaScript Error: ${e.message}`);
+        addTestResult("JavaScript Runtime", false, e.message);
+      });
+    </script>
+  </body>
+</html>

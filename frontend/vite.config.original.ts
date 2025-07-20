@@ -11,27 +11,17 @@ export default defineConfig({
     },
   },
   server: {
-    host: true, // This enables network access
+    host: "0.0.0.0", // Allow external connections
     port: 3000,
     proxy: {
       "/api": {
-        target: "http://localhost:5000",
+        target: "http://192.168.1.26:5000", // Use actual IP for mobile access
         changeOrigin: true,
       },
       "/socket.io": {
-        target: "http://localhost:5000",
-        changeOrigin: true,
+        target: "http://192.168.1.26:5000", // WebSocket proxy for mobile
         ws: true,
-      },
-      "/chat": {
-        target: "http://localhost:5000",
         changeOrigin: true,
-        ws: true,
-      },
-      "/webrtc": {
-        target: "http://localhost:5000",
-        changeOrigin: true,
-        ws: true,
       },
     },
   },

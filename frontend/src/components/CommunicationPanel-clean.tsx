@@ -13,6 +13,8 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({
   className = "",
 }) => {
   const { user } = useAuth();
+  console.log("🗨️ CommunicationPanel user object:", user);
+
   const [isExpanded, setIsExpanded] = useState(true);
   const [isChatCollapsed, setIsChatCollapsed] = useState(false);
 
@@ -33,14 +35,31 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({
     );
   }
 
+  // Ensure user has valid ID for Chat
+  if (!user.id) {
+    console.error("🔴 User object missing ID:", user);
+    return (
+      <div
+        className={`bg-gray-100 border-l border-gray-200 ${className} flex items-center justify-center`}
+      >
+        <div className="text-center p-4">
+          <p className="text-sm text-red-500">
+            User authentication error. Please refresh and try again.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Collapsed state
   if (!isExpanded) {
     return (
       <div className={`bg-white border-l border-gray-200 ${className}`}>
-        <div className="p-2 flex flex-col space-y-2">
+        <div className="p-2">
           <button
             onClick={() => setIsExpanded(true)}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded flex items-center justify-center"
-            title="Open Communication Panel"
+            className="w-full p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded flex items-center justify-center"
+            title="Expand Communication Panel"
           >
             <MessageSquare className="h-5 w-5" />
           </button>
@@ -56,7 +75,7 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({
       {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-900">Communication</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Chat</h2>
           <div className="flex items-center space-x-1">
             <button
               onClick={() => setIsExpanded(false)}
@@ -68,15 +87,9 @@ const CommunicationPanel: React.FC<CommunicationPanelProps> = ({
           </div>
         </div>
 
-        {/* Chat Only Label */}
-        <div className="flex items-center space-x-2">
-          <MessageSquare className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-medium text-blue-600">Chat</span>
-        </div>
-
         {/* Session Info */}
         {projectId && (
-          <div className="mt-2 text-xs text-gray-500">
+          <div className="text-xs text-gray-500">
             Project Session: {projectId}
           </div>
         )}

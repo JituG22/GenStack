@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple WebRTC Test</title>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <h1>Simple WebRTC Test</h1>
+    <button onclick="connectToWebRTC()">Connect to WebRTC</button>
+    <button onclick="listPeers()">List Peers</button>
+    <button onclick="initiateDummyCall()">Send Dummy Offer</button>
+
+    <div id="status"></div>
+    <div id="peers"></div>
+    <div id="logs"></div>
+
+    <script>
+      let webrtcSocket = null;
+      let peers = [];
+
+      function log(message) {
+        const logs = document.getElementById("logs");
+        logs.innerHTML +=
+          "<div>" + new Date().toISOString() + ": " + message + "</div>";
+        console.log(message);
+      }
+
+      function connectToWebRTC() {
+        // Get token from localStorage (assuming user is logged in)
+        const userStr = localStorage.getItem("user");
+        if (!userStr) {
+          log("❌ User not logged in");
+          return;
+        }
+
+        const user = JSON.parse(userStr);
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          log("❌ No token found");
+          return;
+        }
+
+        log("🔌 Connecting to WebRTC socket...");
+        webrtcSocket = io("/webrtc", {
+          auth: { token },
+          autoConnect: true,
+          reconnection: true,
+        });
+
+        webrtcSocket.on("connect", () => {
+          log("✅ WebRTC socket connected. Socket ID: " + webrtcSocket.id);
+          document.getElementById("status").innerHTML =
+            "Connected: " + webrtcSocket.id;
+        });
+
+        webrtcSocket.on("peer_joined", (peer) => {
+          log("👤 Peer joined: " + JSON.stringify(peer));
+          peers.push(peer);
+          updatePeersList();
+        });
+
+        webrtcSocket.on("peers_list", (peersList) => {
+          log("👥 Peers list received: " + JSON.stringify(peersList));
+          peers = peersList;
+          updatePeersList();
+        });
+
+        webrtcSocket.on("webrtc_offer", (data) => {
+          log("📞 WebRTC offer received: " + JSON.stringify(data));
+        });
+
+        webrtcSocket.on("webrtc_answer", (data) => {
+          log("📞 WebRTC answer received: " + JSON.stringify(data));
+        });
+
+        webrtcSocket.on("disconnect", () => {
+          log("❌ WebRTC socket disconnected");
+          document.getElementById("status").innerHTML = "Disconnected";
+        });
+
+        webrtcSocket.on("connect_error", (error) => {
+          log("❌ Connection error: " + error.message);
+        });
+      }
+
+      function updatePeersList() {
+        const peersDiv = document.getElementById("peers");
+        peersDiv.innerHTML = "<h3>Available Peers:</h3>";
+        peers.forEach((peer) => {
+          peersDiv.innerHTML += `
+                    <div style="border: 1px solid #ccc; margin: 5px; padding: 10px;">
+                        <strong>ID:</strong> ${peer.id}<br>
+                        <strong>User ID:</strong> ${peer.userId}<br>
+                        <strong>Username:</strong> ${peer.username}<br>
+                        <button onclick="callPeer('${peer.id}')">Call This Peer</button>
+                    </div>
+                `;
+        });
+      }
+
+      function listPeers() {
+        if (!webrtcSocket) {
+          log("❌ Not connected to WebRTC");
+          return;
+        }
+        log("📋 Requesting peers list...");
+        webrtcSocket.emit("get_peers");
+      }
+
+      function callPeer(targetPeerId) {
+        if (!webrtcSocket) {
+          log("❌ Not connected to WebRTC");
+          return;
+        }
+
+        log("📞 Calling peer: " + targetPeerId);
+
+        // Create a dummy offer
+        const dummyOffer = {
+          type: "offer",
+          sdp: "v=0\r\no=- 123456789 1 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE 0\r\na=msid-semantic: WMS\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\nc=IN IP4 0.0.0.0\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:test\r\na=ice-pwd:test\r\na=fingerprint:sha-256 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00\r\na=setup:actpass\r\na=mid:0\r\na=sendrecv\r\na=rtcp-mux\r\na=rtpmap:96 VP8/90000\r\n",
+        };
+
+        webrtcSocket.emit("webrtc_offer", {
+          roomId: "test-room",
+          targetPeerId: targetPeerId,
+          offer: dummyOffer,
+        });
+
+        log("📤 Offer sent to: " + targetPeerId);
+      }
+
+      function initiateDummyCall() {
+        if (peers.length === 0) {
+          log("❌ No peers available");
+          return;
+        }
+
+        const firstPeer = peers[0];
+        callPeer(firstPeer.id);
+      }
+    </script>
+  </body>
+</html>

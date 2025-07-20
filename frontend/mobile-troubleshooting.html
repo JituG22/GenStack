@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mobile Video Troubleshooting</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 15px;
+        background: #f8f9fa;
+        margin: 0;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .error-section {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      .solution-section {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      .info-section {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      .quick-test {
+        background: #28a745;
+      }
+      .step {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 10px 0;
+      }
+      .code {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 12px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚨 Mobile Video Troubleshooting Guide</h1>
+
+      <div class="info-section">
+        <h3>📱 Quick Access Links:</h3>
+        <button onclick="window.open('/mobile-debug-enhanced.html', '_blank')">
+          🔍 Enhanced Diagnostic Tool
+        </button>
+        <button onclick="window.open('/mobile-video-test.html', '_blank')">
+          📹 Basic Video Test
+        </button>
+        <button class="quick-test" onclick="runQuickTest()">
+          ⚡ Quick Test Here
+        </button>
+      </div>
+
+      <div id="quickTestResult" style="display: none"></div>
+
+      <h2>🔍 Common Issues & Solutions</h2>
+
+      <div class="error-section">
+        <h3>❌ "NotAllowedError" or "Permission denied"</h3>
+        <p>
+          <strong>Cause:</strong> Browser doesn't have permission to access
+          camera/microphone
+        </p>
+      </div>
+      <div class="solution-section">
+        <h3>✅ Solutions:</h3>
+        <div class="step">
+          <strong>Step 1:</strong> Check browser address bar for
+          camera/microphone icons and click to allow
+        </div>
+        <div class="step">
+          <strong>Step 2:</strong> Go to browser settings → Site permissions →
+          Allow camera and microphone for this site
+        </div>
+        <div class="step">
+          <strong>Step 3:</strong> Clear browser cache and reload the page
+        </div>
+      </div>
+
+      <div class="error-section">
+        <h3>❌ "NotFoundError" or "Requested device not found"</h3>
+        <p><strong>Cause:</strong> No camera or microphone found on device</p>
+      </div>
+      <div class="solution-section">
+        <h3>✅ Solutions:</h3>
+        <div class="step">
+          <strong>Step 1:</strong> Check if other camera apps work on your
+          device
+        </div>
+        <div class="step">
+          <strong>Step 2:</strong> Try switching between front and back cameras
+        </div>
+        <div class="step">
+          <strong>Step 3:</strong> Restart your browser and try again
+        </div>
+      </div>
+
+      <div class="error-section">
+        <h3>❌ "NotReadableError" or "Could not start video source"</h3>
+        <p><strong>Cause:</strong> Camera is already in use by another app</p>
+      </div>
+      <div class="solution-section">
+        <h3>✅ Solutions:</h3>
+        <div class="step">
+          <strong>Step 1:</strong> Close all other camera apps (including video
+          calling apps)
+        </div>
+        <div class="step">
+          <strong>Step 2:</strong> Close all browser tabs that might be using
+          the camera
+        </div>
+        <div class="step"><strong>Step 3:</strong> Restart your browser</div>
+      </div>
+
+      <div class="error-section">
+        <h3>❌ "OverconstrainedError" or "Constraints cannot be satisfied"</h3>
+        <p>
+          <strong>Cause:</strong> Requested video settings are not supported
+        </p>
+      </div>
+      <div class="solution-section">
+        <h3>✅ Solutions:</h3>
+        <div class="step">
+          <strong>Step 1:</strong> Try the minimal video test (lower resolution)
+        </div>
+        <div class="step">
+          <strong>Step 2:</strong> Switch between front and back cameras
+        </div>
+        <div class="step">
+          <strong>Step 3:</strong> Use basic constraints without specific
+          requirements
+        </div>
+      </div>
+
+      <div class="error-section">
+        <h3>❌ "NotSupportedError" or "getUserMedia not supported"</h3>
+        <p>
+          <strong>Cause:</strong> Browser doesn't support WebRTC or needs HTTPS
+        </p>
+      </div>
+      <div class="solution-section">
+        <h3>✅ Solutions:</h3>
+        <div class="step">
+          <strong>Step 1:</strong> Update your browser to the latest version
+        </div>
+        <div class="step">
+          <strong>Step 2:</strong> Try a different browser (Chrome, Firefox,
+          Safari)
+        </div>
+        <div class="step">
+          <strong>Step 3:</strong> Ensure you're using HTTPS or localhost
+        </div>
+      </div>
+
+      <h2>🔧 Browser-Specific Issues</h2>
+
+      <div class="info-section">
+        <h3>📱 iOS Safari</h3>
+        <ul>
+          <li>Requires iOS 11+ for WebRTC support</li>
+          <li>May need to enable camera in iOS Settings → Safari → Camera</li>
+          <li>Try switching to landscape mode</li>
+          <li>Ensure "Request Desktop Site" is OFF</li>
+        </ul>
+      </div>
+
+      <div class="info-section">
+        <h3>🤖 Android Chrome</h3>
+        <ul>
+          <li>Check Android Settings → Apps → Chrome → Permissions</li>
+          <li>Clear Chrome cache and data if needed</li>
+          <li>Try Chrome Canary for latest features</li>
+          <li>Disable battery optimization for Chrome</li>
+        </ul>
+      </div>
+
+      <div class="info-section">
+        <h3>🦊 Firefox Mobile</h3>
+        <ul>
+          <li>Check about:config for media.navigator.enabled</li>
+          <li>Clear Firefox cache and cookies</li>
+          <li>Try Firefox Nightly for latest WebRTC support</li>
+        </ul>
+      </div>
+
+      <h2>🛠️ Manual Testing Steps</h2>
+
+      <div class="step">
+        <strong>Test 1:</strong> Open browser developer tools (if available) and
+        check console for error messages
+      </div>
+
+      <div class="step">
+        <strong>Test 2:</strong> Try this simple JavaScript in the browser
+        console:
+        <div class="code">
+          navigator.mediaDevices.getUserMedia({video: true}) .then(stream =>
+          console.log('✅ Video working!', stream)) .catch(err =>
+          console.log('❌ Error:', err.name, err.message));
+        </div>
+      </div>
+
+      <div class="step">
+        <strong>Test 3:</strong> Check device capabilities:
+        <div class="code">
+          navigator.mediaDevices.enumerateDevices() .then(devices =>
+          console.log('📱 Devices:', devices));
+        </div>
+      </div>
+
+      <div class="step">
+        <strong>Test 4:</strong> Test with minimal constraints:
+        <div class="code">
+          navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240
+          } }).then(stream => console.log('✅ Minimal video working!'))
+          .catch(err => console.log('❌ Minimal failed:', err));
+        </div>
+      </div>
+
+      <h2>📞 Still Having Issues?</h2>
+
+      <div class="info-section">
+        <p><strong>Collect this information for debugging:</strong></p>
+        <ul>
+          <li>📱 Device model and OS version</li>
+          <li>🌐 Browser name and version</li>
+          <li>🔗 Exact URL you're trying to access</li>
+          <li>❌ Exact error message from console</li>
+          <li>📊 Results from the diagnostic tools above</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      async function runQuickTest() {
+        const resultDiv = document.getElementById("quickTestResult");
+        resultDiv.style.display = "block";
+        resultDiv.innerHTML =
+          '<div class="info-section"><h3>🧪 Running Quick Test...</h3><div id="quickLog"></div></div>';
+
+        const log = (msg) => {
+          document.getElementById("quickLog").innerHTML += msg + "<br>";
+        };
+
+        try {
+          // Test 1: Basic support
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            log("❌ getUserMedia not supported");
+            return;
+          }
+          log("✅ getUserMedia supported");
+
+          // Test 2: Device enumeration
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = devices.filter((d) => d.kind === "videoinput");
+          log(`📷 Found ${videoDevices.length} camera(s)`);
+
+          // Test 3: Basic video
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+            });
+            log("✅ Basic video access successful!");
+            stream.getTracks().forEach((track) => track.stop());
+          } catch (error) {
+            log(`❌ Video access failed: ${error.name} - ${error.message}`);
+          }
+
+          // Test 4: Mobile constraints
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              video: { width: 320, height: 240, facingMode: "user" },
+            });
+            log("✅ Mobile video constraints successful!");
+            stream.getTracks().forEach((track) => track.stop());
+          } catch (error) {
+            log(
+              `❌ Mobile constraints failed: ${error.name} - ${error.message}`
+            );
+          }
+        } catch (error) {
+          log(`💥 Test failed: ${error.message}`);
+        }
+      }
+
+      // Auto-detect device info
+      window.addEventListener("load", () => {
+        const isMobile =
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          );
+        if (isMobile) {
+          document.body.insertAdjacentHTML(
+            "afterbegin",
+            '<div class="info-section" style="background: #d4edda;"><strong>📱 Mobile device detected!</strong> This guide is optimized for your device.</div>'
+          );
+        }
+      });
+    </script>
+  </body>
+</html>
