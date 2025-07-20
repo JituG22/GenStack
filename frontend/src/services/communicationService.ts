@@ -182,8 +182,14 @@ class CommunicationService {
     if (!this.webrtcSocket) return;
 
     // Room events
-    this.webrtcSocket.on("room_created", (room: WebRTCRoom) => {
-      this.emit("room_created", room);
+    this.webrtcSocket.on("room-created", (data: any) => {
+      console.log("🎥 Room created event received:", data);
+      this.emit("room_created", data.room || data);
+    });
+
+    this.webrtcSocket.on("room-joined", (data: any) => {
+      console.log("🎥 Room joined event received:", data);
+      this.emit("room_joined", data);
     });
 
     this.webrtcSocket.on("room_updated", (room: WebRTCRoom) => {
@@ -211,6 +217,7 @@ class CommunicationService {
     this.webrtcSocket.on(
       "webrtc_offer",
       (data: { from: string; offer: RTCSessionDescriptionInit }) => {
+        console.log("🎥 WebRTC offer received:", data);
         this.emit("webrtc_offer", data);
       }
     );
@@ -218,6 +225,7 @@ class CommunicationService {
     this.webrtcSocket.on(
       "webrtc_answer",
       (data: { from: string; answer: RTCSessionDescriptionInit }) => {
+        console.log("🎥 WebRTC answer received:", data);
         this.emit("webrtc_answer", data);
       }
     );
@@ -225,9 +233,16 @@ class CommunicationService {
     this.webrtcSocket.on(
       "webrtc_ice_candidate",
       (data: { from: string; candidate: RTCIceCandidateInit }) => {
+        console.log("🎥 WebRTC ICE candidate received:", data);
         this.emit("webrtc_ice_candidate", data);
       }
     );
+
+    // Error handling
+    this.webrtcSocket.on("webrtc-error", (error: any) => {
+      console.error("❌ WebRTC error received:", error);
+      this.emit("webrtc_error", error);
+    });
 
     this.webrtcSocket.on(
       "call_started",
@@ -415,12 +430,40 @@ class CommunicationService {
     mediaConstraints: { audio: boolean; video: boolean }
   ): Promise<void> {
     if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
-    this.webrtcSocket.emit("join_room", { roomId, mediaConstraints });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+    const username =
+      `${user.firstName} ${user.lastName}`.trim() ||
+      user.email ||
+      "Unknown User";
+
+    this.webrtcSocket.emit("join_room", {
+      roomId,
+      mediaConstraints,
+      userId,
+      username,
+    });
   }
 
   async leaveWebRTCRoom(roomId: string): Promise<void> {
     if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
-    this.webrtcSocket.emit("leave_room", { roomId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.webrtcSocket.emit("leave_room", {
+      roomId,
+      userId,
+    });
   }
 
   async sendWebRTCOffer(
@@ -429,7 +472,20 @@ class CommunicationService {
     offer: RTCSessionDescriptionInit
   ): Promise<void> {
     if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
-    this.webrtcSocket.emit("webrtc_offer", { roomId, targetPeerId, offer });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.webrtcSocket.emit("webrtc_offer", {
+      roomId,
+      targetPeerId,
+      offer,
+      fromUserId: userId,
+    });
   }
 
   async sendWebRTCAnswer(
@@ -438,7 +494,20 @@ class CommunicationService {
     answer: RTCSessionDescriptionInit
   ): Promise<void> {
     if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
-    this.webrtcSocket.emit("webrtc_answer", { roomId, targetPeerId, answer });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.webrtcSocket.emit("webrtc_answer", {
+      roomId,
+      targetPeerId,
+      answer,
+      fromUserId: userId,
+    });
   }
 
   async sendWebRTCIceCandidate(
@@ -447,41 +516,130 @@ class CommunicationService {
     candidate: RTCIceCandidateInit
   ): Promise<void> {
     if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
     this.webrtcSocket.emit("webrtc_ice_candidate", {
       roomId,
       targetPeerId,
       candidate,
+      fromUserId: userId,
+    });
+  }
+
+  async createWebRTCRoom(
+    sessionId: string,
+    name: string,
+    settings?: {
+      allowScreenShare?: boolean;
+      requireMicPermission?: boolean;
+      requireVideoPermission?: boolean;
+      isPublic?: boolean;
+    }
+  ): Promise<void> {
+    if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+    const username =
+      `${user.firstName} ${user.lastName}`.trim() ||
+      user.email ||
+      "Unknown User";
+
+    this.webrtcSocket.emit("create_room", {
+      sessionId,
+      name,
+      userId,
+      username,
+      settings,
     });
   }
 
   async startCall(roomId: string): Promise<void> {
     if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
-    this.webrtcSocket.emit("start_call", { roomId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.webrtcSocket.emit("initiate_call", { roomId, userId });
   }
 
   async endCall(roomId: string): Promise<void> {
     if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
-    this.webrtcSocket.emit("end_call", { roomId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.webrtcSocket.emit("end_call", { roomId, userId });
   }
 
   async startRecording(roomId: string): Promise<void> {
     if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
-    this.webrtcSocket.emit("start_recording", { roomId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.webrtcSocket.emit("start_recording", { roomId, userId });
   }
 
   async stopRecording(roomId: string): Promise<void> {
     if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
-    this.webrtcSocket.emit("stop_recording", { roomId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.webrtcSocket.emit("stop_recording", { roomId, userId });
   }
 
   async startScreenShare(roomId: string): Promise<void> {
     if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
-    this.webrtcSocket.emit("start_screen_share", { roomId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.webrtcSocket.emit("start_screen_share", { roomId, userId });
   }
 
   async stopScreenShare(roomId: string): Promise<void> {
     if (!this.webrtcSocket) throw new Error("WebRTC socket not connected");
-    this.webrtcSocket.emit("stop_screen_share", { roomId });
+
+    // Get user info from localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) throw new Error("User not authenticated");
+
+    const user = JSON.parse(userStr);
+    const userId = user.id;
+
+    this.webrtcSocket.emit("stop_screen_share", { roomId, userId });
   }
 
   // Event handling
@@ -602,27 +760,6 @@ class CommunicationService {
 
     const data = await response.json();
     return data.data;
-  }
-
-  async createWebRTCRoom(
-    name: string,
-    settings: Partial<WebRTCRoom["settings"]> = {}
-  ): Promise<WebRTCRoom> {
-    const response = await fetch("/api/communication/webrtc/rooms", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name, settings }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to create WebRTC room: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.data.room;
   }
 
   async getCommunicationStats(): Promise<any> {

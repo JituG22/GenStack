@@ -97,16 +97,29 @@ export default class RealtimeChatService {
 
   private setupEventHandlers(): void {
     this.chatNamespace.on("connection", (socket: any) => {
-      console.log(`Chat client connected: ${socket.id}`);
+      console.log(`🔌 Chat client connected: ${socket.id}`);
 
       // Join chat session
-      socket.on("join_session", this.handleJoinChat.bind(this, socket));
+      socket.on("join_session", (data: any) => {
+        console.log(`📥 Received join_session from ${socket.id}:`, data);
+        this.handleJoinChat(socket, data);
+      });
 
       // Leave chat session
-      socket.on("leave_session", this.handleLeaveChat.bind(this, socket));
+      socket.on("leave_session", (data: any) => {
+        console.log(`📤 Received leave_session from ${socket.id}:`, data);
+        this.handleLeaveChat(socket, data);
+      });
 
       // Send message
-      socket.on("send_message", this.handleSendMessage.bind(this, socket));
+      socket.on("send_message", (data: any) => {
+        console.log(`💬 Received send_message from ${socket.id}:`, {
+          sessionId: data.sessionId,
+          content: data.content?.substring(0, 50),
+          type: data.type,
+        });
+        this.handleSendMessage(socket, data);
+      });
 
       // Typing indicators
       socket.on("start_typing", this.handleTypingStart.bind(this, socket));
@@ -131,7 +144,12 @@ export default class RealtimeChatService {
       socket.on("load_history", this.handleLoadHistory.bind(this, socket));
 
       // Disconnect
-      socket.on("disconnect", this.handleDisconnect.bind(this, socket));
+      socket.on("disconnect", (reason: string) => {
+        console.log(
+          `🔌 Chat client disconnected: ${socket.id}, reason: ${reason}`
+        );
+        this.handleDisconnect(socket);
+      });
     });
   }
 
@@ -140,10 +158,18 @@ export default class RealtimeChatService {
     data: { sessionId: string; userId: string; username: string }
   ): Promise<void> {
     try {
+      console.log(`🚪 User joining chat session:`, {
+        socketId: socket.id,
+        sessionId: data.sessionId,
+        userId: data.userId,
+        username: data.username,
+      });
+
       const { sessionId, userId, username } = data;
 
       // Create or get chat session
       if (!this.chatSessions.has(sessionId)) {
+        console.log(`🆕 Creating new chat session: ${sessionId}`);
         this.chatSessions.set(sessionId, {
           id: sessionId,
           sessionId,
@@ -170,6 +196,13 @@ export default class RealtimeChatService {
       chatSession.participants.set(userId, participant);
       socket.join(`chat-${sessionId}`);
 
+      console.log(`✅ Participant added:`, {
+        userId,
+        username,
+        socketId: socket.id,
+        totalParticipants: chatSession.participants.size,
+      });
+
       // Load recent message history
       const recentMessages = await this.loadRecentMessages(sessionId, 50);
 
@@ -190,9 +223,9 @@ export default class RealtimeChatService {
         },
       });
 
-      console.log(`User ${username} joined chat session ${sessionId}`);
+      console.log(`👋 User ${username} joined chat session ${sessionId}`);
     } catch (error) {
-      console.error("Error handling join chat:", error);
+      console.error("❌ Error handling join chat:", error);
       socket.emit("chat-error", { message: "Failed to join chat session" });
     }
   }
@@ -235,20 +268,42 @@ export default class RealtimeChatService {
     }
   ): Promise<void> {
     try {
+      console.log(`📨 Handling send message from socket ${socket.id}:`, {
+        sessionId: data.sessionId,
+        content: data.content.substring(0, 50),
+        type: data.type,
+      });
+
       const chatSession = this.chatSessions.get(data.sessionId);
       if (!chatSession) {
+        console.error(`❌ Chat session not found: ${data.sessionId}`);
         socket.emit("chat-error", { message: "Chat session not found" });
         return;
       }
+
+      console.log(`🔍 Looking for participant with socketId: ${socket.id}`);
+      console.log(
+        `👥 Available participants:`,
+        Array.from(chatSession.participants.values()).map((p) => ({
+          userId: p.userId,
+          username: p.username,
+          socketId: p.socketId,
+        }))
+      );
 
       const participant = Array.from(chatSession.participants.values()).find(
         (p) => p.socketId === socket.id
       );
 
       if (!participant) {
+        console.error(`❌ Participant not found for socket ${socket.id}`);
         socket.emit("chat-error", { message: "Participant not found" });
         return;
       }
+
+      console.log(
+        `✅ Found participant: ${participant.username} (${participant.userId})`
+      );
 
       const message: ChatMessage = {
         id: uuidv4(),
@@ -270,9 +325,11 @@ export default class RealtimeChatService {
       chatSession.messages.push(message);
       chatSession.lastActivity = new Date();
 
+      console.log(`💾 Persisting message to Redis...`);
       // Persist message to Redis
       await this.persistMessage(message);
 
+      console.log(`📡 Broadcasting message to chat-${data.sessionId}...`);
       // Broadcast message to all participants
       this.chatNamespace
         .to(`chat-${data.sessionId}`)
@@ -289,13 +346,12 @@ export default class RealtimeChatService {
       }
 
       console.log(
-        `Message sent in session ${data.sessionId}: ${message.content.substring(
-          0,
-          50
-        )}...`
+        `✅ Message sent in session ${
+          data.sessionId
+        }: ${message.content.substring(0, 50)}...`
       );
     } catch (error) {
-      console.error("Error handling send message:", error);
+      console.error("❌ Error handling send message:", error);
       socket.emit("chat-error", { message: "Failed to send message" });
     }
   }

@@ -152,23 +152,35 @@ export default class WebRTCService {
   private async handleCreateRoom(
     socket: any,
     data: {
-      sessionId: string;
-      name: string;
-      userId: string;
-      username: string;
+      sessionId?: string;
+      name?: string;
+      userId?: string;
+      username?: string;
+      maxParticipants?: number;
+      roomType?: string;
       settings?: any;
-    }
+    } = {}
   ): Promise<void> {
     try {
+      console.log(`🎥 WebRTC create room request:`, {
+        socketId: socket.id,
+        sessionId: data.sessionId,
+        name: data.name,
+        userId: data.userId,
+        username: data.username,
+        maxParticipants: data.maxParticipants,
+        roomType: data.roomType,
+      });
+
       const roomId = uuidv4();
 
       const room: WebRTCRoom = {
         id: roomId,
-        sessionId: data.sessionId,
-        name: data.name,
-        createdBy: data.userId,
+        sessionId: data.sessionId || `session-${roomId.substring(0, 8)}`,
+        name: data.name || `Room-${roomId.substring(0, 8)}`,
+        createdBy: data.userId || `anonymous-${socket.id}`,
         createdAt: new Date(),
-        maxParticipants: 10,
+        maxParticipants: data.maxParticipants || 10,
         peers: new Map(),
         isRecording: false,
         settings: {
@@ -190,9 +202,13 @@ export default class WebRTCService {
         room: this.serializeRoom(room),
       });
 
-      console.log(`WebRTC room created: ${roomId} by ${data.username}`);
+      console.log(
+        `✅ WebRTC room created: ${roomId} by ${
+          data.username || "anonymous"
+        } (sessionId: ${room.sessionId})`
+      );
     } catch (error) {
-      console.error("Error creating room:", error);
+      console.error("❌ Error creating WebRTC room:", error);
       socket.emit("webrtc-error", { message: "Failed to create room" });
     }
   }
@@ -201,23 +217,33 @@ export default class WebRTCService {
     socket: any,
     data: {
       roomId: string;
-      userId: string;
-      username: string;
+      userId?: string;
+      username?: string;
       mediaConstraints: {
         audio: boolean;
         video: boolean;
-        screen: boolean;
+        screen?: boolean;
       };
     }
   ): Promise<void> {
     try {
+      console.log(`🎥 WebRTC join room request:`, {
+        socketId: socket.id,
+        roomId: data.roomId,
+        userId: data.userId,
+        username: data.username,
+        mediaConstraints: data.mediaConstraints,
+      });
+
       const room = this.rooms.get(data.roomId);
       if (!room) {
+        console.error(`❌ WebRTC room not found: ${data.roomId}`);
         socket.emit("webrtc-error", { message: "Room not found" });
         return;
       }
 
       if (room.peers.size >= room.maxParticipants) {
+        console.error(`❌ WebRTC room is full: ${data.roomId}`);
         socket.emit("webrtc-error", { message: "Room is full" });
         return;
       }
@@ -225,12 +251,16 @@ export default class WebRTCService {
       // Create peer
       const peer: WebRTCPeer = {
         id: uuidv4(),
-        userId: data.userId,
-        username: data.username,
+        userId: data.userId || `anonymous-${socket.id}`,
+        username: data.username || `User-${socket.id.substring(0, 8)}`,
         socketId: socket.id,
         roomId: data.roomId,
         isInitiator: room.peers.size === 0,
-        mediaConstraints: data.mediaConstraints,
+        mediaConstraints: {
+          audio: data.mediaConstraints.audio,
+          video: data.mediaConstraints.video,
+          screen: data.mediaConstraints.screen || false,
+        },
         connectionState: "connecting",
         joinedAt: new Date(),
       };
@@ -240,6 +270,14 @@ export default class WebRTCService {
 
       // Join socket room
       socket.join(`webrtc-${data.roomId}`);
+
+      console.log(`✅ Peer joined WebRTC room:`, {
+        peerId: peer.id,
+        userId: peer.userId,
+        username: peer.username,
+        roomId: data.roomId,
+        totalPeers: room.peers.size,
+      });
 
       // Notify existing peers
       socket.to(`webrtc-${data.roomId}`).emit("peer-joined", {
