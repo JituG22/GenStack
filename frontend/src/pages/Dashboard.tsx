@@ -342,7 +342,16 @@ export default function Dashboard() {
         {stats.map((stat) => (
           <div
             key={stat.name}
-            className="relative bg-white pt-5 px-4 pb-12 sm:pt-6 sm:px-6 shadow rounded-lg overflow-hidden"
+            className={`relative bg-white pt-5 px-4 pb-12 sm:pt-6 sm:px-6 shadow rounded-lg overflow-hidden ${
+              stat.name === "Total Projects"
+                ? "cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-200"
+                : ""
+            }`}
+            onClick={
+              stat.name === "Total Projects"
+                ? () => navigate("/projects")
+                : undefined
+            }
           >
             <dt>
               <div className={`absolute ${stat.color} rounded-md p-3`}>
