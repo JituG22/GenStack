@@ -111,3 +111,6 @@ data/
 # Redis
 dump.rdb
 .mynote
+frontend/localhost-key.pem
+frontend/localhost.pem
+frontend/localhost-key.pem
